@@ -1,13 +1,21 @@
-import { useEffect, useRef, useState } from 'react'
-import GlitchText from '../vhs/GlitchText'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 const HEADLINES = [
   'HARD TECHNO',
   'RIJEKA, CROATIA',
   'SINCE 1995',
   '300+ TRACKS',
+  'LOVE PARADE BERLIN',
   'TECHNODROME',
   'BEAST MUSIC',
+]
+
+const BOOT_LINES = [
+  'LOADING SYSTEM...',
+  'VHS DECK // INIT',
+  'AUDIO BUS // CONNECTED',
+  'SOUNDCHECK // OK',
+  'SIGNAL LOCKED',
 ]
 
 export default function HeroSection() {
@@ -15,28 +23,102 @@ export default function HeroSection() {
   const [headlineIndex, setHeadlineIndex] = useState(0)
   const [headlineVisible, setHeadlineVisible] = useState(true)
   const [timecode, setTimecode] = useState('00:00:00:00')
+  const [bootLine, setBootLine] = useState(0)
+  const [typedText, setTypedText] = useState('')
+  const [showCursor, setShowCursor] = useState(true)
   const sectionRef = useRef<HTMLElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const rafRef = useRef<number>(0)
 
-  // Boot sequence
+  // Animated frequency bars in background
   useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = []
-    timers.push(setTimeout(() => setPhase(1), 400))
-    timers.push(setTimeout(() => setPhase(2), 1200))
-    timers.push(setTimeout(() => setPhase(3), 2000))
-    timers.push(setTimeout(() => setPhase(4), 2800))
-    return () => timers.forEach(clearTimeout)
+    const canvas = canvasRef.current
+    if (!canvas || phase < 3) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const resize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    const barCount = 64
+    const phases: number[] = Array.from({ length: barCount }, (_, i) => i * 0.15)
+
+    const draw = (t: number) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      const w = canvas.width / barCount
+
+      for (let i = 0; i < barCount; i++) {
+        const val = (Math.sin(t * 0.001 + phases[i]) * 0.5 + 0.5) *
+                    (Math.sin(t * 0.0007 + i * 0.3) * 0.3 + 0.7)
+        const h = val * canvas.height * 0.45
+        const x = i * w
+
+        // Cyan bars left half, red bars right half, blend in middle
+        const ratio = i / barCount
+        const r = Math.round(ratio * 255)
+        const g = Math.round((1 - ratio) * 255 * 0.8)
+        const b = Math.round((1 - ratio) * 204 + ratio * 60)
+        ctx.fillStyle = `rgba(${r},${g},${b},0.04)`
+        ctx.fillRect(x, canvas.height - h, w - 1, h)
+      }
+
+      rafRef.current = requestAnimationFrame(draw)
+    }
+    rafRef.current = requestAnimationFrame(draw)
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      window.removeEventListener('resize', resize)
+    }
+  }, [phase])
+
+  // Boot sequence — tighter, more dramatic
+  useEffect(() => {
+    const t: ReturnType<typeof setTimeout>[] = []
+    t.push(setTimeout(() => setPhase(1), 300))    // CRT on
+    t.push(setTimeout(() => setPhase(2), 900))    // boot text starts
+    t.push(setTimeout(() => setBootLine(1), 1200))
+    t.push(setTimeout(() => setBootLine(2), 1500))
+    t.push(setTimeout(() => setBootLine(3), 1800))
+    t.push(setTimeout(() => setBootLine(4), 2100))
+    t.push(setTimeout(() => setPhase(3), 2600))   // main reveal
+    t.push(setTimeout(() => setPhase(4), 3400))   // fully live
+    return () => t.forEach(clearTimeout)
   }, [])
+
+  // Typewriter effect for "DJ OGI" during phase 3
+  useEffect(() => {
+    if (phase < 3) return
+    const full = 'DJ OGI'
+    let i = 0
+    const interval = setInterval(() => {
+      i++
+      setTypedText(full.slice(0, i))
+      if (i >= full.length) clearInterval(interval)
+    }, 80)
+    return () => clearInterval(interval)
+  }, [phase])
+
+  // Cursor blink
+  useEffect(() => {
+    if (phase < 3) return
+    const interval = setInterval(() => setShowCursor(p => !p), 530)
+    return () => clearInterval(interval)
+  }, [phase])
 
   // Rotating headlines
   useEffect(() => {
-    if (phase < 3) return
+    if (phase < 4) return
     const interval = setInterval(() => {
       setHeadlineVisible(false)
       setTimeout(() => {
         setHeadlineIndex((prev) => (prev + 1) % HEADLINES.length)
         setHeadlineVisible(true)
       }, 400)
-    }, 2500)
+    }, 2800)
     return () => clearInterval(interval)
   }, [phase])
 
@@ -55,102 +137,238 @@ export default function HeroSection() {
     return () => clearInterval(interval)
   }, [phase])
 
-  const skipToReady = () => setPhase(4)
+  const skipToReady = useCallback(() => {
+    setPhase(4)
+    setTypedText('DJ OGI')
+    setBootLine(4)
+  }, [])
 
   return (
     <section
       id="hero"
       ref={sectionRef}
-      className="section flex items-center justify-center relative bg-black"
+      className="section flex items-center justify-center relative bg-black overflow-hidden"
     >
-      {/* CRT Power-on */}
+      {/* Ambient frequency bars */}
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" style={{ opacity: phase >= 3 ? 1 : 0, transition: 'opacity 1s ease' }} />
+
+      {/* CRT Power-on circle wipe */}
       <div
-        className="absolute inset-0 bg-[#0a0a0a] transition-all duration-600 ease-out"
+        className="absolute inset-0 bg-[#0a0a0c] transition-all ease-out"
         style={{
           clipPath: phase >= 1 ? 'circle(150% at 50% 50%)' : 'circle(0% at 50% 50%)',
+          transitionDuration: '0.6s',
         }}
       />
 
-      {/* VHS Tracking bars */}
-      {phase < 2 && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-full h-8 bg-white/5"
-              style={{
-                top: `${20 * i + 10}%`,
-                animation: `trackingBar 0.8s ${i * 0.1}s linear infinite`,
-              }}
-            />
+      {/* VHS tracking bars during boot */}
+      {phase >= 1 && phase < 3 && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="absolute w-full" style={{
+              height: `${3 + Math.random() * 4}px`,
+              top: `${15 * i + 8}%`,
+              background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)`,
+              animation: `heroTrackingBar ${0.6 + i * 0.12}s ${i * 0.08}s linear infinite`,
+            }} />
           ))}
         </div>
       )}
 
-      {/* Main content */}
-      <div className={`relative z-10 text-center px-4 transition-opacity duration-500 ${phase >= 2 ? 'opacity-100' : 'opacity-0'}`}>
-        {/* DJ OGI - massive, fills screen */}
-        <GlitchText
-          text="DJ OGI"
-          as="h1"
-          active={phase >= 4}
-          className="font-vhs text-[18vw] md:text-[16vw] lg:text-[14vw] leading-[0.85] tracking-[0.15em] text-white"
-        />
+      {/* Horizontal scan line that sweeps continuously */}
+      {phase >= 3 && (
+        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+          <div className="absolute left-0 right-0 h-[2px]"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(0,255,204,0.08), transparent)',
+              animation: 'heroScanLine 4s linear infinite',
+            }} />
+        </div>
+      )}
+
+      {/* Boot terminal text */}
+      {phase >= 2 && phase < 4 && (
+        <div className="absolute top-16 left-6 md:left-10 z-20 space-y-1">
+          {BOOT_LINES.slice(0, bootLine + 1).map((line, i) => (
+            <div key={i} className="font-vhs text-[10px] tracking-widest"
+              style={{
+                color: i === bootLine ? 'rgba(0,255,204,0.6)' : 'rgba(0,255,204,0.2)',
+                opacity: 1,
+                animation: `bootFadeIn 0.3s ease`,
+              }}>
+              {'>'} {line}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── MAIN CONTENT ── */}
+      <div className={`relative z-20 text-center px-4 transition-all duration-700 ${phase >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+
+        {/* Date badge above name */}
+        <div className={`transition-all duration-500 ${phase >= 4 ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="inline-block px-4 py-1 rounded-full mb-6"
+            style={{ border: '1px solid rgba(0,255,204,0.15)', background: 'rgba(0,255,204,0.04)' }}>
+            <span className="font-vhs text-[10px] text-primary/60 tracking-[0.5em]">EST. 1995 // RIJEKA</span>
+          </div>
+        </div>
+
+        {/* DJ OGI — massive typewriter reveal */}
+        <h1 className="font-vhs text-[20vw] md:text-[16vw] lg:text-[13vw] leading-[0.82] tracking-[0.12em] text-white relative inline-block"
+          style={{
+            textShadow: phase >= 4
+              ? '0 0 80px rgba(0,255,204,0.15), 0 0 160px rgba(0,255,204,0.08)'
+              : 'none',
+            transition: 'text-shadow 1.5s ease',
+          }}>
+          {/* Red ghost (RGB split) */}
+          <span className="absolute inset-0 pointer-events-none select-none" aria-hidden
+            style={{
+              color: 'transparent',
+              textShadow: phase >= 4 ? '-3px 0 rgba(255,0,60,0.4)' : 'none',
+              transition: 'text-shadow 0.5s ease',
+            }}>
+            {typedText}
+          </span>
+          {/* Cyan ghost */}
+          <span className="absolute inset-0 pointer-events-none select-none" aria-hidden
+            style={{
+              color: 'transparent',
+              textShadow: phase >= 4 ? '3px 0 rgba(0,255,204,0.4)' : 'none',
+              transition: 'text-shadow 0.5s ease',
+            }}>
+            {typedText}
+          </span>
+          {/* Actual text */}
+          {typedText}
+          {/* Blinking cursor */}
+          {phase === 3 && (
+            <span className="font-vhs text-primary" style={{ opacity: showCursor ? 1 : 0 }}>_</span>
+          )}
+        </h1>
+
+        {/* Underline glow */}
+        <div className={`mx-auto mt-3 h-[2px] rounded-full transition-all duration-1000 ease-out ${phase >= 4 ? 'w-64 opacity-100' : 'w-0 opacity-0'}`}
+          style={{ background: 'linear-gradient(90deg, transparent, #00ffcc, transparent)', boxShadow: '0 0 12px rgba(0,255,204,0.6)' }} />
 
         {/* Rotating headline */}
-        <div className="h-14 md:h-16 flex items-center justify-center mt-4 overflow-hidden">
-          {phase >= 3 && (
-            <div
-              className={`font-vhs text-2xl md:text-3xl lg:text-4xl tracking-[0.25em] text-primary transition-all duration-300 ${
-                headlineVisible
-                  ? 'opacity-100 translate-y-0 blur-0'
-                  : 'opacity-0 translate-y-4 blur-sm'
-              }`}
-            >
+        <div className="h-16 md:h-20 flex items-center justify-center mt-4 overflow-hidden">
+          {phase >= 4 && (
+            <div className={`font-vhs text-2xl md:text-4xl lg:text-5xl tracking-[0.2em] transition-all duration-400 ${
+              headlineVisible
+                ? 'opacity-100 translate-y-0 blur-0'
+                : 'opacity-0 translate-y-6 blur-sm'
+            }`}
+            style={{
+              background: 'linear-gradient(135deg, #00ffcc 0%, #ffffff 50%, #ff003c 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
               {HEADLINES[headlineIndex]}
             </div>
           )}
         </div>
 
-        {/* Thin separator line */}
-        <div className={`mx-auto mt-4 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent transition-all duration-1000 ${phase >= 4 ? 'w-48 opacity-100' : 'w-0 opacity-0'}`} />
+        {/* Stats strip */}
+        <div className={`flex items-center justify-center gap-6 md:gap-10 mt-2 transition-all duration-700 ${phase >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+          style={{ transitionDelay: '0.5s' }}>
+          {[
+            { val: '30+', label: 'YEARS' },
+            { val: '300+', label: 'TRACKS' },
+            { val: '5', label: 'LABELS' },
+          ].map(({ val, label }) => (
+            <div key={label} className="text-center">
+              <div className="font-vhs text-xl md:text-2xl text-white/70">{val}</div>
+              <div className="font-vhs text-[7px] text-white/15 tracking-[0.4em]">{label}</div>
+            </div>
+          ))}
+        </div>
 
-        {/* Scroll indicator */}
-        <div className={`mt-10 transition-opacity duration-1000 ${phase >= 4 ? 'opacity-50' : 'opacity-0'}`}>
-          <div className="font-vhs text-[10px] text-white/30 tracking-[0.5em] mb-3">SCROLL</div>
-          <div className="w-px h-6 bg-white/15 mx-auto animate-pulse" />
+        {/* Scroll CTA */}
+        <div className={`mt-14 transition-all duration-700 ${phase >= 4 ? 'opacity-60' : 'opacity-0'}`}
+          style={{ transitionDelay: '1s' }}>
+          <div className="font-vhs text-[9px] text-white/30 tracking-[0.6em] mb-3">SCROLL TO EXPLORE</div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-4 h-7 rounded-full border border-white/15 flex items-start justify-center p-1">
+              <div className="w-1 h-2 rounded-full bg-primary/50" style={{ animation: 'heroScrollDot 1.5s ease-in-out infinite' }} />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* REC indicator */}
+      {/* ── HUD CORNERS ── */}
+      {/* Top-left: REC */}
       {phase >= 4 && (
-        <div className="absolute top-5 left-5 flex items-center gap-2 font-vhs text-xs">
-          <span className="rec-dot w-1.5 h-1.5 rounded-full bg-accent inline-block" />
-          <span className="text-accent/70">REC</span>
+        <div className="absolute top-5 left-5 z-20 flex items-center gap-2">
+          <span className="rec-dot w-2 h-2 rounded-full bg-accent inline-block shadow-[0_0_8px_#ff003c]" />
+          <span className="font-vhs text-[11px] text-accent/80 tracking-widest">REC</span>
         </div>
       )}
 
-      {/* Timecode */}
+      {/* Top-right: timecode */}
       {phase >= 4 && (
-        <div className="absolute top-5 right-5 font-vhs text-xs text-white/25">
+        <div className="absolute top-5 right-5 z-20 font-vhs text-[11px] text-white/30 tracking-wider tabular-nums">
           {timecode}
         </div>
       )}
 
-      {/* Skip */}
-      {phase < 4 && phase > 0 && (
-        <button
-          onClick={skipToReady}
-          className="absolute bottom-6 right-6 font-vhs text-[10px] text-white/20 hover:text-white/50 transition-colors tracking-widest"
-        >
+      {/* Bottom-left: channel/freq */}
+      {phase >= 4 && (
+        <div className="absolute bottom-5 left-5 z-20">
+          <div className="font-vhs text-[8px] text-white/10 tracking-[0.4em]">CH-01 // 145.00 BPM</div>
+          <div className="flex gap-0.5 mt-1">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="w-1 rounded-sm"
+                style={{
+                  height: `${4 + Math.random() * 8}px`,
+                  background: i < 8 ? `rgba(0,255,204,${0.2 + i * 0.06})` : `rgba(255,0,60,${0.3 + (i - 8) * 0.15})`,
+                  animation: `heroBarPulse ${0.3 + Math.random() * 0.4}s ease-in-out infinite alternate`,
+                  animationDelay: `${i * 0.05}s`,
+                }} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom-right: date stamp */}
+      {phase >= 4 && (
+        <div className="absolute bottom-5 right-5 z-20 text-right">
+          <div className="font-vhs text-[8px] text-white/10 tracking-[0.3em]">
+            {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
+          </div>
+          <div className="font-vhs text-[8px] text-primary/20 tracking-[0.3em]">SP MODE // HI-FI</div>
+        </div>
+      )}
+
+      {/* Skip button */}
+      {phase > 0 && phase < 4 && (
+        <button onClick={skipToReady}
+          className="absolute bottom-6 right-6 z-30 font-vhs text-[10px] text-white/20 hover:text-primary/60 transition-colors tracking-widest">
           SKIP &gt;&gt;
         </button>
       )}
 
       <style>{`
-        @keyframes trackingBar {
-          0% { transform: translateY(-100vh); }
-          100% { transform: translateY(100vh); }
+        @keyframes heroTrackingBar {
+          0% { transform: translateY(-100vh); opacity: 1; }
+          100% { transform: translateY(100vh); opacity: 0; }
+        }
+        @keyframes heroScanLine {
+          0% { top: -2px; }
+          100% { top: 100%; }
+        }
+        @keyframes bootFadeIn {
+          from { opacity: 0; transform: translateX(-8px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes heroScrollDot {
+          0%, 100% { transform: translateY(0); opacity: 0.5; }
+          50% { transform: translateY(8px); opacity: 1; }
+        }
+        @keyframes heroBarPulse {
+          0% { transform: scaleY(0.6); }
+          100% { transform: scaleY(1.3); }
         }
       `}</style>
     </section>
