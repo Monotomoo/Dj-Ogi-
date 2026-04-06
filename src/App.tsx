@@ -5,6 +5,7 @@ import MixerSection from './components/sections/MixerSection'
 import BioSection from './components/sections/BioSection'
 import LabelsSection from './components/sections/LabelsSection'
 import ContactSection from './components/sections/ContactSection'
+import FooterSection from './components/sections/FooterSection'
 import VHSOverlay from './components/vhs/VHSOverlay'
 import Navigation from './components/layout/Navigation'
 import PressMarquee from './components/layout/PressMarquee'
@@ -68,6 +69,7 @@ function App() {
         <MixerSection />
         <BioSection />
         <LabelsSection />
+        <FooterSection />
       </main>
     </>
   )

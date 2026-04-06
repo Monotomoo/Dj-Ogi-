@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { bookingEmail } from '../../data/socials'
 
-const formInitial = { name: '', email: '', message: '' }
 
 const platforms = [
   {
@@ -76,17 +75,6 @@ const platforms = [
 export default function ContactSection() {
   const [hoveredPlatform, setHoveredPlatform] = useState<number | null>(null)
   const [emailHovered, setEmailHovered] = useState(false)
-  const [formData, setFormData] = useState(formInitial)
-  const [sent, setSent] = useState(false)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const subject = encodeURIComponent(`Booking Inquiry from ${formData.name}`)
-    const body = encodeURIComponent(`From: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`)
-    window.open(`mailto:${bookingEmail}?subject=${subject}&body=${body}`)
-    setSent(true)
-    setTimeout(() => { setSent(false); setFormData(formInitial) }, 3000)
-  }
 
   return (
     <section id="contact" className="relative pt-20 pb-10 overflow-hidden"
@@ -268,60 +256,6 @@ export default function ContactSection() {
           </div>
         </a>
 
-        {/* ── CONTACT FORM ── */}
-        <div className="mb-10">
-          <div className="font-vhs text-[9px] text-primary/30 tracking-[0.5em] mb-4">// BOOKING INQUIRY</div>
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              type="text"
-              placeholder="YOUR NAME"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-white/[0.02] border border-white/[0.06] rounded-md px-4 py-2.5
-                font-vhs text-xs text-white/70 placeholder:text-white/15 outline-none
-                focus:border-primary/30 focus:ring-1 focus:ring-primary/20 transition-all"
-            />
-            <input
-              type="email"
-              placeholder="YOUR EMAIL"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full bg-white/[0.02] border border-white/[0.06] rounded-md px-4 py-2.5
-                font-vhs text-xs text-white/70 placeholder:text-white/15 outline-none
-                focus:border-primary/30 focus:ring-1 focus:ring-primary/20 transition-all"
-            />
-            <textarea
-              placeholder="YOUR MESSAGE"
-              required
-              rows={4}
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              className="w-full bg-white/[0.02] border border-white/[0.06] rounded-md px-4 py-2.5
-                font-vhs text-xs text-white/70 placeholder:text-white/15 outline-none resize-none
-                focus:border-primary/30 focus:ring-1 focus:ring-primary/20 transition-all"
-            />
-            <button
-              type="submit"
-              className={`font-vhs text-[10px] tracking-widest px-6 py-2.5 rounded-md transition-all ${
-                sent
-                  ? 'bg-primary/20 text-primary border border-primary/30'
-                  : 'bg-white/[0.04] text-white/50 border border-white/[0.08] hover:bg-primary/10 hover:text-primary hover:border-primary/20'
-              }`}
-            >
-              {sent ? 'SENT //' : 'SEND MESSAGE'}
-            </button>
-          </form>
-        </div>
-
-        {/* ── FOOTER ── */}
-        <div className="pt-4 border-t border-white/[0.03] flex justify-between items-center">
-          <span className="font-vhs text-[7px] text-white/[0.06] tracking-widest">
-            DJ OGI © {new Date().getFullYear()}
-          </span>
-          <span className="font-vhs text-[7px] text-white/[0.06] tracking-widest">RIJEKA // CROATIA</span>
-        </div>
       </div>
     </section>
   )
