@@ -97,7 +97,7 @@ export default function ContactSection() {
         </div>
 
         {/* ── PLATFORM CARDS ── */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-20">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
           {platforms.map((platform, i) => {
             const isHov = hoveredPlatform === i
             return (
@@ -196,39 +196,64 @@ export default function ContactSection() {
           })}
         </div>
 
-        {/* ── EMAIL ── */}
-        <div className="mb-16 pt-12 border-t border-white/[0.04]">
-          <div className="font-vhs text-[9px] text-white/15 tracking-[0.5em] mb-5">DIRECT BOOKING</div>
-          <a
-            href={`mailto:${bookingEmail}`}
-            className="inline-block"
-            onMouseEnter={() => setEmailHovered(true)}
-            onMouseLeave={() => setEmailHovered(false)}
-            style={{ textDecoration: 'none' }}
-          >
-            <div
-              className="font-vhs text-3xl md:text-5xl tracking-tight"
-              style={{
-                color: emailHovered ? '#00ffcc' : 'rgba(255,255,255,0.88)',
-                textShadow: emailHovered
-                  ? '0 0 40px rgba(0,255,204,0.7), 0 0 100px rgba(0,255,204,0.3)'
-                  : 'none',
-                transition: 'color 0.3s ease, text-shadow 0.3s ease',
-              }}
-            >
-              {bookingEmail}
+        {/* ── EMAIL CARD (full-width, same family as platform cards) ── */}
+        <a
+          href={`mailto:${bookingEmail}`}
+          className="relative rounded-xl overflow-hidden block mb-20"
+          onMouseEnter={() => setEmailHovered(true)}
+          onMouseLeave={() => setEmailHovered(false)}
+          style={{
+            padding: '1.75rem 2rem',
+            background: emailHovered
+              ? 'rgba(0,255,204,0.07)'
+              : 'rgba(255,255,255,0.02)',
+            border: `1px solid ${emailHovered ? 'rgba(0,255,204,0.35)' : 'rgba(255,255,255,0.05)'}`,
+            transform: emailHovered ? 'translateY(-6px)' : 'translateY(0)',
+            boxShadow: emailHovered
+              ? '0 24px 60px rgba(0,255,204,0.2), 0 0 60px rgba(0,255,204,0.08), inset 0 1px 0 rgba(0,255,204,0.15)'
+              : '0 4px 20px rgba(0,0,0,0.5)',
+            transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            textDecoration: 'none',
+          }}
+        >
+          {/* Top glow bar */}
+          <div className="absolute top-0 left-0 right-0 h-px transition-all duration-300"
+            style={{ background: emailHovered ? 'linear-gradient(90deg, transparent, #00ffcc, transparent)' : 'transparent' }} />
+
+          {/* Corner sparks */}
+          {emailHovered && (
+            <>
+              <div className="absolute top-1 left-1 w-1 h-1 rounded-full" style={{ background: '#00ffcc', opacity: 0.6, filter: 'blur(2px)' }} />
+              <div className="absolute top-1 right-1 w-1 h-1 rounded-full" style={{ background: '#00ffcc', opacity: 0.4, filter: 'blur(2px)' }} />
+            </>
+          )}
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <div className="font-vhs text-[9px] tracking-[0.5em] mb-3"
+                style={{ color: emailHovered ? 'rgba(0,255,204,0.6)' : 'rgba(255,255,255,0.15)' }}>
+                DIRECT BOOKING
+              </div>
+              <div className="font-vhs text-2xl md:text-4xl tracking-tight"
+                style={{
+                  color: emailHovered ? '#00ffcc' : 'rgba(255,255,255,0.88)',
+                  textShadow: emailHovered ? '0 0 40px rgba(0,255,204,0.6)' : 'none',
+                  transition: 'color 0.3s, text-shadow 0.3s',
+                }}>
+                {bookingEmail}
+              </div>
             </div>
-            <div
-              className="font-vhs text-[11px] mt-3 tracking-[0.5em]"
+            <div className="font-vhs text-[11px] tracking-[0.4em] shrink-0"
               style={{
-                color: emailHovered ? 'rgba(0,255,204,0.6)' : 'rgba(255,255,255,0.1)',
-                transition: 'color 0.3s ease',
-              }}
-            >
+                color: emailHovered ? '#00ffcc' : 'rgba(255,255,255,0.1)',
+                opacity: emailHovered ? 1 : 0.5,
+                transform: emailHovered ? 'translateX(0)' : 'translateX(-6px)',
+                transition: 'all 0.3s ease',
+              }}>
               WRITE NOW →
             </div>
-          </a>
-        </div>
+          </div>
+        </a>
 
         {/* ── FOOTER ── */}
         <div className="pt-5 border-t border-white/[0.03] flex justify-between items-center">
