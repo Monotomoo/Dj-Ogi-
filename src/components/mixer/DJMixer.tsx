@@ -14,6 +14,8 @@ export default function DJMixer() {
   const crossfader = useAudioStore((s) => s.crossfader)
   const deckAVolume = useAudioStore((s) => s.deckA.volume)
   const deckBVolume = useAudioStore((s) => s.deckB.volume)
+  const deckAPlaying = useAudioStore((s) => s.deckA.isPlaying)
+  const deckBPlaying = useAudioStore((s) => s.deckB.isPlaying)
   const prevCrossfader = useRef(crossfader)
 
   useEffect(() => {
@@ -55,22 +57,14 @@ export default function DJMixer() {
     scManager.setVolume('B', volumeB)
   }, [crossfader, deckAVolume, deckBVolume])
 
-  // Smart crossfader handoff — SC only plays one stream at a time.
-  // When the fader crosses 50%, auto-play the dominant deck.
-  // SC will automatically pause the other one.
   useEffect(() => {
     const prev = prevCrossfader.current
     prevCrossfader.current = crossfader
-
     const state = useAudioStore.getState()
     const bothLoaded = state.deckA.isLoaded && state.deckB.isLoaded
     if (!bothLoaded) return
-
-    if (prev <= 0.5 && crossfader > 0.5 && !state.deckB.isPlaying) {
-      scManager.play('B')
-    } else if (prev >= 0.5 && crossfader < 0.5 && !state.deckA.isPlaying) {
-      scManager.play('A')
-    }
+    if (prev <= 0.5 && crossfader > 0.5 && !state.deckB.isPlaying) scManager.play('B')
+    else if (prev >= 0.5 && crossfader < 0.5 && !state.deckA.isPlaying) scManager.play('A')
   }, [crossfader])
 
   return (
@@ -83,50 +77,85 @@ export default function DJMixer() {
           src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(essentialTracks[1].soundcloudUrl)}&color=%23ff003c&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false`} />
       </div>
 
-      {/* MIXER CONSOLE */}
-      <div className="relative rounded-xl overflow-hidden"
+      {/* MIXER SHELL */}
+      <div className="relative rounded-2xl overflow-hidden"
         style={{
-          background: 'linear-gradient(180deg, #0c0c0e 0%, #08080a 50%, #0a0a0c 100%)',
-          boxShadow: '0 0 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.04)',
+          background: 'linear-gradient(180deg, #111116 0%, #0a0a0e 40%, #08080c 100%)',
+          boxShadow: '0 0 100px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.06)',
         }}>
 
         {/* Top chrome bar */}
-        <div className="flex items-center justify-between px-5 py-2.5 border-b border-white/[0.04]"
-          style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-primary/50 shadow-[0_0_6px_rgba(0,255,204,0.3)]" />
-            <span className="font-vhs text-[10px] text-primary/30 tracking-[0.3em]">DECK A</span>
+        <div className="flex items-center justify-between px-6 py-3"
+          style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          {/* Deck A indicator */}
+          <div className="flex items-center gap-2.5">
+            <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${deckAPlaying ? 'bg-primary shadow-[0_0_12px_#00ffcc,0_0_24px_#00ffcc60]' : 'bg-primary/20'}`} />
+            <span className="font-vhs text-[11px] text-primary/50 tracking-[0.35em]">DECK A</span>
           </div>
-          <div className="font-vhs text-xs text-white/15 tracking-[0.4em]">DJ OGI // MIXER</div>
-          <div className="flex items-center gap-3">
-            <span className="font-vhs text-[10px] text-accent/30 tracking-[0.3em]">DECK B</span>
-            <div className="w-2 h-2 rounded-full bg-accent/50 shadow-[0_0_6px_rgba(255,0,60,0.3)]" />
+
+          {/* Center brand */}
+          <div className="font-vhs text-[11px] text-white/20 tracking-[0.45em]">DJ OGI // MIXER</div>
+
+          {/* Deck B indicator */}
+          <div className="flex items-center gap-2.5">
+            <span className="font-vhs text-[11px] text-accent/50 tracking-[0.35em]">DECK B</span>
+            <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${deckBPlaying ? 'bg-accent shadow-[0_0_12px_#ff003c,0_0_24px_#ff003c60]' : 'bg-accent/20'}`} />
           </div>
         </div>
 
-        {/* Decks area */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-x divide-white/[0.03]">
-          <div className="p-4 lg:p-5">
-            <Deck deckId="A" />
+        {/* Decks */}
+        <div className="grid grid-cols-1 lg:grid-cols-2">
+          {/* Deck A panel */}
+          <div className="relative p-5 lg:p-6"
+            style={{
+              borderRight: '1px solid rgba(255,255,255,0.04)',
+              background: deckAPlaying
+                ? 'linear-gradient(135deg, rgba(0,255,204,0.04) 0%, transparent 60%)'
+                : 'transparent',
+              transition: 'background 0.8s ease',
+            }}>
+            {/* Ambient glow when playing */}
+            {deckAPlaying && (
+              <div className="absolute top-0 left-0 w-48 h-48 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse, rgba(0,255,204,0.08) 0%, transparent 70%)' }} />
+            )}
+            <div className="relative">
+              <Deck deckId="A" />
+            </div>
           </div>
-          <div className="p-4 lg:p-5">
-            <Deck deckId="B" />
+
+          {/* Deck B panel */}
+          <div className="relative p-5 lg:p-6"
+            style={{
+              background: deckBPlaying
+                ? 'linear-gradient(225deg, rgba(255,0,60,0.04) 0%, transparent 60%)'
+                : 'transparent',
+              transition: 'background 0.8s ease',
+            }}>
+            {deckBPlaying && (
+              <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse, rgba(255,0,60,0.08) 0%, transparent 70%)' }} />
+            )}
+            <div className="relative">
+              <Deck deckId="B" />
+            </div>
           </div>
         </div>
 
         {/* Crossfader zone */}
-        <div className="px-5 py-4 border-t border-white/[0.04]"
-          style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.01) 100%)' }}>
+        <div className="px-6 py-5"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%)' }}>
           <Crossfader />
         </div>
 
         {/* Bottom chrome */}
-        <div className="flex justify-between items-center px-5 py-1.5 border-t border-white/[0.03]">
-          <span className="font-vhs text-[7px] text-white/[0.06] tracking-widest">SOUNDCLOUD POWERED</span>
-          <div className="flex gap-4">
-            <span className="font-vhs text-[7px] text-white/[0.06] tracking-widest">RIJEKA</span>
-            <span className="font-vhs text-[7px] text-white/[0.06] tracking-widest">CROATIA</span>
+        <div className="flex justify-between items-center px-6 py-2"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.03)', background: 'rgba(0,0,0,0.4)' }}>
+          <span className="font-vhs text-[7px] text-white/[0.08] tracking-widest">SOUNDCLOUD POWERED</span>
+          <div className="flex gap-5">
+            <span className="font-vhs text-[7px] text-white/[0.08] tracking-widest">RIJEKA</span>
+            <span className="font-vhs text-[7px] text-white/[0.08] tracking-widest">CROATIA</span>
           </div>
         </div>
       </div>
