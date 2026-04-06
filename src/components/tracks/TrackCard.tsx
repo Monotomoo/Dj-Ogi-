@@ -112,21 +112,24 @@ export default function TrackCard({ track, compact = false }: TrackCardProps) {
             </button>
           </div>
 
-          {/* Track name — only visible on hover */}
+          {/* Track name + BPM — visible on hover */}
           <div
-            className="absolute top-0 inset-x-0 px-1.5 pt-1 pb-4 transition-all duration-300"
+            className="absolute inset-x-0 bottom-8 top-0 flex flex-col justify-end px-2.5 pb-3 transition-all duration-300"
             style={{
               background: isHovered
-                ? 'linear-gradient(180deg, rgba(0,0,0,0.65) 0%, transparent 100%)'
+                ? 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.85) 100%)'
                 : 'transparent',
               opacity: isHovered ? 1 : 0,
+              transform: isHovered ? 'translateY(0)' : 'translateY(4px)',
             }}
           >
-            <div className="font-vhs text-[7px] text-white truncate leading-tight">
+            <div className="font-vhs text-[11px] md:text-xs text-white leading-tight mb-1"
+              style={{ textShadow: '0 1px 8px rgba(0,0,0,0.9)' }}>
               {track.title.toUpperCase()}
             </div>
-            <div className="font-vhs text-[6px] text-primary/70">
-              {track.bpm}
+            <div className="font-vhs text-base md:text-lg font-bold text-primary leading-none"
+              style={{ textShadow: '0 0 12px rgba(0,255,204,0.8)' }}>
+              {track.bpm} <span className="text-[9px] text-primary/60 font-normal">BPM</span>
             </div>
           </div>
         </div>
