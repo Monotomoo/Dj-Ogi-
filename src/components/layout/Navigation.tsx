@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 
 const sections = [
   { id: 'hero', label: 'TOP' },
+  { id: 'contact', label: 'LINKS' },
   { id: 'events', label: 'LIVE' },
   { id: 'mixer', label: 'MIX' },
   { id: 'bio', label: 'BIO' },
-  { id: 'contact', label: 'BOOK' },
 ]
 
 export default function Navigation() {
