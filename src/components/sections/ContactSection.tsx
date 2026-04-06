@@ -89,50 +89,6 @@ export default function ContactSection() {
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 relative">
 
-        {/* ── HEADER ── */}
-        <div className="mb-16">
-          <div className="font-vhs text-[9px] text-primary/40 tracking-[0.6em] mb-3">// GET IN TOUCH</div>
-          <h2 className="font-vhs text-6xl md:text-8xl text-white tracking-wider rgb-split mb-4">BOOKING</h2>
-          <div className="h-px w-64 bg-gradient-to-r from-primary/30 to-transparent mb-4" />
-          <p className="font-vhs text-xs text-white/20 tracking-[0.25em]">
-            WORLDWIDE BOOKINGS · COLLABORATIONS · PRESS
-          </p>
-        </div>
-
-        {/* ── EMAIL ── */}
-        <div className="mb-16">
-          <div className="font-vhs text-[9px] text-white/12 tracking-[0.5em] mb-5">DIRECT BOOKING</div>
-          <a
-            href={`mailto:${bookingEmail}`}
-            className="inline-block group"
-            onMouseEnter={() => setEmailHovered(true)}
-            onMouseLeave={() => setEmailHovered(false)}
-            style={{ textDecoration: 'none' }}
-          >
-            <div
-              className="font-vhs text-3xl md:text-5xl tracking-tight"
-              style={{
-                color: emailHovered ? '#00ffcc' : 'rgba(255,255,255,0.88)',
-                textShadow: emailHovered
-                  ? '0 0 40px rgba(0,255,204,0.7), 0 0 100px rgba(0,255,204,0.3)'
-                  : 'none',
-                transition: 'color 0.3s ease, text-shadow 0.3s ease',
-              }}
-            >
-              {bookingEmail}
-            </div>
-            <div
-              className="font-vhs text-[11px] mt-3 tracking-[0.5em]"
-              style={{
-                color: emailHovered ? 'rgba(0,255,204,0.6)' : 'rgba(255,255,255,0.1)',
-                transition: 'color 0.3s ease',
-              }}
-            >
-              WRITE NOW →
-            </div>
-          </a>
-        </div>
-
         {/* ── DIVIDER ── */}
         <div className="flex items-center gap-5 mb-12">
           <div className="h-px flex-1 bg-gradient-to-r from-primary/25 to-transparent" />
@@ -238,6 +194,40 @@ export default function ContactSection() {
               </a>
             )
           })}
+        </div>
+
+        {/* ── EMAIL ── */}
+        <div className="mb-16 pt-12 border-t border-white/[0.04]">
+          <div className="font-vhs text-[9px] text-white/15 tracking-[0.5em] mb-5">DIRECT BOOKING</div>
+          <a
+            href={`mailto:${bookingEmail}`}
+            className="inline-block"
+            onMouseEnter={() => setEmailHovered(true)}
+            onMouseLeave={() => setEmailHovered(false)}
+            style={{ textDecoration: 'none' }}
+          >
+            <div
+              className="font-vhs text-3xl md:text-5xl tracking-tight"
+              style={{
+                color: emailHovered ? '#00ffcc' : 'rgba(255,255,255,0.88)',
+                textShadow: emailHovered
+                  ? '0 0 40px rgba(0,255,204,0.7), 0 0 100px rgba(0,255,204,0.3)'
+                  : 'none',
+                transition: 'color 0.3s ease, text-shadow 0.3s ease',
+              }}
+            >
+              {bookingEmail}
+            </div>
+            <div
+              className="font-vhs text-[11px] mt-3 tracking-[0.5em]"
+              style={{
+                color: emailHovered ? 'rgba(0,255,204,0.6)' : 'rgba(255,255,255,0.1)',
+                transition: 'color 0.3s ease',
+              }}
+            >
+              WRITE NOW →
+            </div>
+          </a>
         </div>
 
         {/* ── FOOTER ── */}
