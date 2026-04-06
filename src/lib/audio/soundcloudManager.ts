@@ -50,6 +50,7 @@ interface DeckController {
   isReady: boolean
   pendingLoad: string | null
   pendingPlay: boolean
+  isPlaying: boolean
 }
 
 type ProgressCallback = (data: { position: number; relativePosition: number }) => void
@@ -58,8 +59,8 @@ type TrackCallback = (track: { title: string; artist: string; duration: number }
 
 class SoundCloudManager {
   private decks: Record<DeckId, DeckController> = {
-    A: { widget: null, iframe: null, isReady: false, pendingLoad: null, pendingPlay: false },
-    B: { widget: null, iframe: null, isReady: false, pendingLoad: null, pendingPlay: false },
+    A: { widget: null, iframe: null, isReady: false, pendingLoad: null, pendingPlay: false, isPlaying: false },
+    B: { widget: null, iframe: null, isReady: false, pendingLoad: null, pendingPlay: false, isPlaying: false },
   }
 
   private progressCallbacks: Record<DeckId, ProgressCallback | null> = { A: null, B: null }
@@ -160,14 +161,17 @@ class SoundCloudManager {
     widget.bind(Events.READY, handleReady)
 
     widget.bind(Events.PLAY, () => {
+      deck.isPlaying = true
       this.stateCallbacks[deckId]?.('play')
     })
 
     widget.bind(Events.PAUSE, () => {
+      deck.isPlaying = false
       this.stateCallbacks[deckId]?.('pause')
     })
 
     widget.bind(Events.FINISH, () => {
+      deck.isPlaying = false
       this.stateCallbacks[deckId]?.('finish')
     })
 
@@ -211,8 +215,10 @@ class SoundCloudManager {
       return
     }
 
+    const wasPlaying = deck.isPlaying
     deck.isReady = false
-    deck.pendingPlay = false
+    deck.isPlaying = false
+    deck.pendingPlay = wasPlaying
     this.stateCallbacks[deckId]?.('loading')
 
     deck.widget.load(url, {

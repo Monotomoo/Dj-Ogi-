@@ -1,115 +1,213 @@
+import { useState } from 'react'
 import { upcomingEvents, pastHighlights } from '../../data/events'
 
 export default function EventsSection() {
-  const hasUpcoming = upcomingEvents.length > 0
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
   return (
-    <section id="events" className="relative py-14 overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #000 0%, #060608 30%, #080810 50%, #060608 70%, #000 100%)' }}>
+    <section id="events" className="relative py-24 overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #000 0%, #04040a 40%, #060610 60%, #000 100%)' }}>
 
-      {/* Animated background glow */}
+      {/* Background ambience */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-[0.03]"
-          style={{ background: 'radial-gradient(ellipse, #00ffcc 0%, transparent 70%)', filter: 'blur(100px)' }} />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full opacity-[0.04]"
+          style={{ background: 'radial-gradient(ellipse, #00ffcc 0%, transparent 65%)', filter: 'blur(120px)' }} />
+        <div className="absolute bottom-1/4 right-0 w-[500px] h-[400px] opacity-[0.03]"
+          style={{ background: 'radial-gradient(ellipse, #ff003c 0%, transparent 65%)', filter: 'blur(100px)' }} />
+        {/* Horizontal scan lines - subtle */}
+        <div className="absolute inset-0 opacity-[0.015]"
+          style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.5) 3px, rgba(255,255,255,0.5) 4px)' }} />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 relative">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="font-vhs text-[9px] text-accent/30 tracking-[0.5em] mb-2">// UPCOMING</div>
-          <h2 className="font-vhs text-4xl md:text-6xl text-white tracking-wider rgb-split">LIVE</h2>
-          <div className="mt-3 h-px w-32 mx-auto bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+      <div className="max-w-5xl mx-auto px-4 md:px-8 relative">
+
+        {/* ── HEADER ── */}
+        <div className="text-center mb-20">
+          <div className="font-vhs text-[9px] text-primary/40 tracking-[0.6em] mb-4">// DJ OGI</div>
+          <h2 className="font-vhs text-6xl md:text-8xl text-white tracking-wider rgb-split mb-4">LIVE</h2>
+          <div className="flex items-center justify-center gap-4">
+            <div className="h-px flex-1 max-w-[120px] bg-gradient-to-r from-transparent to-primary/20" />
+            <span className="font-vhs text-[9px] text-primary/30 tracking-[0.4em]">BOOK YOUR NIGHT</span>
+            <div className="h-px flex-1 max-w-[120px] bg-gradient-to-l from-transparent to-primary/20" />
+          </div>
         </div>
 
-        {/* Upcoming Events */}
-        {hasUpcoming ? (
-          <div className="space-y-3 mb-12">
-            {upcomingEvents.map((event, i) => (
-              <div key={i} className="group relative rounded-lg overflow-hidden border border-primary/10
-                hover:border-primary/25 transition-all duration-300"
-                style={{ background: 'linear-gradient(135deg, rgba(0,255,204,0.03) 0%, rgba(0,0,0,0.5) 100%)' }}>
-                <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0 p-4 md:p-5">
-                  {/* Date */}
-                  <div className="md:w-32">
-                    <div className="font-vhs text-lg text-primary">{event.date}</div>
+        {/* ── UPCOMING EVENTS ── */}
+        <div className="mb-24 space-y-4">
+          {upcomingEvents.map((event, i) => {
+            const isFirst = i === 0
+            const isSoldOut = event.status === 'sold-out'
+            const isHovered = hoveredIdx === i
+
+            return (
+              <div
+                key={i}
+                className="group relative rounded-xl overflow-hidden cursor-default transition-all duration-500"
+                style={{
+                  transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+                  boxShadow: isHovered
+                    ? `0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(${isFirst ? '0,255,204' : '255,0,60'},0.08)`
+                    : '0 4px 20px rgba(0,0,0,0.5)',
+                }}
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}
+              >
+                {/* Card background */}
+                <div className="absolute inset-0"
+                  style={{
+                    background: isHovered
+                      ? `linear-gradient(135deg, rgba(${isFirst ? '0,255,204' : '255,0,60'},0.06) 0%, rgba(0,0,0,0.95) 60%)`
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.9) 100%)',
+                    transition: 'background 0.5s ease',
+                  }} />
+
+                {/* Left accent bar */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-500"
+                  style={{
+                    background: isFirst
+                      ? `linear-gradient(180deg, #00ffcc, #00ffcc88)`
+                      : `linear-gradient(180deg, #ff003c, #ff003c88)`,
+                    opacity: isHovered ? 1 : 0.4,
+                    boxShadow: isHovered
+                      ? `0 0 20px ${isFirst ? '#00ffcc' : '#ff003c'}60`
+                      : 'none',
+                  }} />
+
+                {/* Border */}
+                <div className="absolute inset-0 rounded-xl transition-all duration-500"
+                  style={{
+                    border: `1px solid rgba(${isFirst ? '0,255,204' : '255,0,60'},${isHovered ? '0.2' : '0.06'})`,
+                  }} />
+
+                {/* NEXT badge */}
+                {isFirst && (
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary rec-dot" />
+                    <span className="font-vhs text-[9px] text-primary tracking-[0.3em]">NEXT SHOW</span>
                   </div>
-                  {/* Venue */}
-                  <div className="flex-1">
-                    <div className="font-vhs text-sm text-white/80">{event.venue}</div>
-                    <div className="font-vhs text-[10px] text-white/25 mt-0.5">{event.city}, {event.country}</div>
+                )}
+
+                {/* Content */}
+                <div className="relative flex flex-col md:flex-row md:items-center gap-6 pl-6 pr-6 py-6 md:py-7">
+
+                  {/* Date block */}
+                  <div className="flex items-baseline gap-3 md:w-48 shrink-0">
+                    <span className="font-vhs text-5xl md:text-6xl leading-none"
+                      style={{ color: isFirst ? '#00ffcc' : '#ff003c', opacity: isHovered ? 1 : 0.7, transition: 'opacity 0.3s' }}>
+                      {event.day}
+                    </span>
+                    <div>
+                      <div className="font-vhs text-sm text-white/60 leading-tight">{event.month}</div>
+                      <div className="font-vhs text-xs text-white/25">{event.year}</div>
+                    </div>
                   </div>
-                  {/* Ticket */}
-                  {event.ticketUrl && (
-                    <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
-                      className="font-vhs text-[10px] text-black bg-primary px-4 py-2 rounded tracking-widest
-                        hover:bg-primary/80 transition-colors self-start md:self-center">
-                      TICKETS
-                    </a>
-                  )}
+
+                  {/* Divider */}
+                  <div className="hidden md:block w-px self-stretch"
+                    style={{ background: `linear-gradient(180deg, transparent, rgba(${isFirst ? '0,255,204' : '255,0,60'},0.2), transparent)` }} />
+
+                  {/* Venue info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-vhs text-2xl md:text-3xl text-white tracking-wide leading-tight mb-1 truncate">
+                      {event.venue}
+                    </div>
+                    <div className="font-vhs text-xs text-white/35 tracking-[0.3em]">
+                      {event.city} — {event.country}
+                    </div>
+                    {event.lineup && (
+                      <div className="font-vhs text-[10px] mt-2 tracking-[0.2em]"
+                        style={{ color: isFirst ? 'rgba(0,255,204,0.4)' : 'rgba(255,0,60,0.4)' }}>
+                        {event.lineup}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Ticket button */}
+                  <div className="shrink-0">
+                    {isSoldOut ? (
+                      <div className="font-vhs text-[10px] px-5 py-3 rounded tracking-widest text-center
+                        border border-white/10 text-white/20 cursor-not-allowed">
+                        SOLD OUT
+                      </div>
+                    ) : (
+                      <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
+                        className="group/btn relative font-vhs text-[11px] px-6 py-3 rounded tracking-widest
+                          inline-block text-center overflow-hidden transition-all duration-300"
+                        style={{
+                          background: isFirst
+                            ? 'linear-gradient(135deg, #00ffcc, #00cc99)'
+                            : 'linear-gradient(135deg, #ff003c, #cc0030)',
+                          color: '#000',
+                          boxShadow: isHovered
+                            ? `0 0 24px rgba(${isFirst ? '0,255,204' : '255,0,60'},0.5)`
+                            : 'none',
+                        }}>
+                        TICKETS →
+                      </a>
+                    )}
+                  </div>
                 </div>
-                {/* Electric line at bottom */}
-                <div className="h-px bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0
-                  group-hover:via-primary/40 transition-all" />
+
+                {/* Bottom glow line */}
+                <div className="absolute bottom-0 left-6 right-6 h-px transition-all duration-500"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, rgba(${isFirst ? '0,255,204' : '255,0,60'},${isHovered ? '0.3' : '0.06'}), transparent)`,
+                  }} />
               </div>
-            ))}
-          </div>
-        ) : (
-          /* No upcoming - cinematic empty state */
-          <div className="relative text-center mb-12 py-16 rounded-xl border border-white/[0.03] overflow-hidden"
-            style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.01) 0%, transparent 100%)' }}>
-            {/* Scanning line effect */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent"
-                style={{ animation: 'scanDown 4s linear infinite' }} />
-            </div>
+            )
+          })}
+        </div>
 
-            <div className="font-vhs text-4xl md:text-6xl text-white/[0.04] tracking-[0.3em] mb-3">
-              NO SIGNAL
-            </div>
-            <div className="font-vhs text-xs text-white/10 tracking-[0.4em]">
-              DATES INCOMING // STAY TUNED
-            </div>
-
-            {/* Electric sparks */}
-            <div className="absolute top-1/2 left-1/4 w-1 h-1 rounded-full bg-accent/30"
-              style={{ animation: 'sparkle 2s ease-in-out infinite' }} />
-            <div className="absolute top-1/3 right-1/3 w-0.5 h-0.5 rounded-full bg-primary/30"
-              style={{ animation: 'sparkle 3s ease-in-out infinite 0.7s' }} />
-            <div className="absolute bottom-1/3 right-1/4 w-1 h-1 rounded-full bg-accent/20"
-              style={{ animation: 'sparkle 2.5s ease-in-out infinite 1.2s' }} />
-          </div>
-        )}
-
-        {/* Past highlights - compact grid */}
+        {/* ── PAST HIGHLIGHTS ── */}
         <div>
-          <div className="font-vhs text-[8px] text-white/10 tracking-[0.4em] text-center mb-4">PAST HIGHLIGHTS</div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          {/* Section label */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/[0.06]" />
+            <div className="font-vhs text-[9px] text-white/15 tracking-[0.5em]">PAST HIGHLIGHTS</div>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/[0.06]" />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {pastHighlights.map((event, i) => (
-              <div key={i} className="group px-3 py-2.5 rounded-lg bg-white/[0.01] border border-white/[0.02]
-                hover:bg-white/[0.03] hover:border-white/[0.06] transition-all cursor-default">
-                <div className="font-vhs text-[10px] text-white/30 group-hover:text-white/50 truncate transition-colors">
-                  {event.venue}
-                </div>
-                <div className="flex justify-between mt-1">
-                  <span className="font-vhs text-[8px] text-white/10">{event.city}</span>
-                  <span className="font-vhs text-[8px] text-primary/20">{event.date}</span>
+              <div key={i}
+                className="group relative rounded-lg overflow-hidden px-4 py-3 cursor-default
+                  transition-all duration-300 hover:-translate-y-0.5"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.015) 0%, rgba(0,0,0,0.3) 100%)',
+                  border: '1px solid rgba(255,255,255,0.04)',
+                }}>
+                {/* Hover glow */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"
+                  style={{ background: 'linear-gradient(135deg, rgba(0,255,204,0.04) 0%, transparent 100%)' }} />
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'linear-gradient(180deg, transparent, #00ffcc40, transparent)' }} />
+
+                <div className="relative">
+                  <div className="font-vhs text-[13px] text-white/40 group-hover:text-white/65
+                    transition-colors duration-300 truncate leading-tight mb-1">
+                    {event.venue}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-vhs text-[9px] text-white/15 group-hover:text-white/25 transition-colors">
+                      {event.city}
+                    </span>
+                    <span className="font-vhs text-[9px] text-primary/20 group-hover:text-primary/40 transition-colors">
+                      {event.year}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Footer note */}
+          <div className="mt-8 text-center">
+            <span className="font-vhs text-[8px] text-white/[0.07] tracking-[0.4em]">
+              30+ YEARS // 40+ COUNTRIES // 1000+ EVENTS
+            </span>
+          </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes scanDown {
-          0% { top: -2px; }
-          100% { top: 100%; }
-        }
-        @keyframes sparkle {
-          0%, 100% { opacity: 0; transform: scale(0.5); }
-          50% { opacity: 1; transform: scale(1.5); }
-        }
-      `}</style>
     </section>
   )
 }

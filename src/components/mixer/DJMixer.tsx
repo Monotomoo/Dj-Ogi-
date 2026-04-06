@@ -39,7 +39,9 @@ export default function DJMixer() {
     setupDeck('A')
     setupDeck('B')
     if (iframeARef.current) scManager.initDeck('A', iframeARef.current)
-    if (iframeBRef.current) scManager.initDeck('B', iframeBRef.current)
+    setTimeout(() => {
+      if (iframeBRef.current) scManager.initDeck('B', iframeBRef.current)
+    }, 800)
     useAudioStore.getState().updateDeckA({ bpm: essentialTracks[0].bpm, trackUrl: essentialTracks[0].soundcloudUrl, trackTitle: essentialTracks[0].title, trackArtist: essentialTracks[0].artist })
     useAudioStore.getState().updateDeckB({ bpm: essentialTracks[1].bpm, trackUrl: essentialTracks[1].soundcloudUrl, trackTitle: essentialTracks[1].title, trackArtist: essentialTracks[1].artist })
     startBeatSimulator()
