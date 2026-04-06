@@ -16,7 +16,7 @@ export default function Crossfader() {
           <div className="w-1.5 h-1.5 rounded-full bg-primary" style={{ opacity: leftOpacity * 0.8 + 0.2 }} />
           <span className="font-vhs text-[10px] text-primary/30 tracking-widest">A</span>
         </div>
-        <span className="font-vhs text-[9px] text-white/10 tracking-[0.3em]">CROSSFADER</span>
+        <span className="font-vhs text-[9px] text-white/10 tracking-[0.3em]">CROSSFADER // DRAG PAST CENTER TO SWITCH</span>
         <div className="flex items-center gap-1.5">
           <span className="font-vhs text-[10px] text-accent/30 tracking-widest">B</span>
           <div className="w-1.5 h-1.5 rounded-full bg-accent" style={{ opacity: rightOpacity * 0.8 + 0.2 }} />

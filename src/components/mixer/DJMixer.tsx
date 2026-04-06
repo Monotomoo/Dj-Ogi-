@@ -14,6 +14,7 @@ export default function DJMixer() {
   const crossfader = useAudioStore((s) => s.crossfader)
   const deckAVolume = useAudioStore((s) => s.deckA.volume)
   const deckBVolume = useAudioStore((s) => s.deckB.volume)
+  const prevCrossfader = useRef(crossfader)
 
   useEffect(() => {
     const setupDeck = (deckId: 'A' | 'B') => {
@@ -51,6 +52,24 @@ export default function DJMixer() {
     scManager.setVolume('A', volumeA)
     scManager.setVolume('B', volumeB)
   }, [crossfader, deckAVolume, deckBVolume])
+
+  // Smart crossfader handoff — SC only plays one stream at a time.
+  // When the fader crosses 50%, auto-play the dominant deck.
+  // SC will automatically pause the other one.
+  useEffect(() => {
+    const prev = prevCrossfader.current
+    prevCrossfader.current = crossfader
+
+    const state = useAudioStore.getState()
+    const bothLoaded = state.deckA.isLoaded && state.deckB.isLoaded
+    if (!bothLoaded) return
+
+    if (prev <= 0.5 && crossfader > 0.5 && !state.deckB.isPlaying) {
+      scManager.play('B')
+    } else if (prev >= 0.5 && crossfader < 0.5 && !state.deckA.isPlaying) {
+      scManager.play('A')
+    }
+  }, [crossfader])
 
   return (
     <div className="w-full max-w-7xl mx-auto">
