@@ -63,11 +63,11 @@ function App() {
       <main>
         <HeroSection />
         <PressMarquee />
+        <ContactSection />
         <EventsSection />
         <MixerSection />
         <BioSection />
         <LabelsSection />
-        <ContactSection />
       </main>
     </>
   )
