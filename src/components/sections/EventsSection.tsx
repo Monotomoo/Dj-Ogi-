@@ -160,51 +160,91 @@ export default function EventsSection() {
 
         {/* ── PAST HIGHLIGHTS ── */}
         <div>
-          {/* Section label */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/[0.06]" />
-            <div className="font-vhs text-[9px] text-white/15 tracking-[0.5em]">PAST HIGHLIGHTS</div>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/[0.06]" />
+          {/* Section header */}
+          <div className="mb-12">
+            <div className="flex items-end justify-between mb-3">
+              <div>
+                <div className="font-vhs text-[9px] text-primary/40 tracking-[0.5em] mb-2">// CAREER ARCHIVE</div>
+                <h3 className="font-vhs text-3xl md:text-4xl text-white tracking-wider">HIGHLIGHTS</h3>
+              </div>
+              <div className="text-right">
+                <div className="font-vhs text-4xl md:text-5xl text-white/5 leading-none select-none">30</div>
+                <div className="font-vhs text-[8px] text-white/15 tracking-[0.3em] -mt-1">YEARS OF TECHNO</div>
+              </div>
+            </div>
+            <div className="h-px bg-gradient-to-r from-primary/30 via-white/10 to-transparent" />
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {/* Setlist rows */}
+          <div className="space-y-0">
             {pastHighlights.map((event, i) => (
               <div key={i}
-                className="group relative rounded-lg overflow-hidden px-4 py-3 cursor-default
-                  transition-all duration-300 hover:-translate-y-0.5"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.015) 0%, rgba(0,0,0,0.3) 100%)',
-                  border: '1px solid rgba(255,255,255,0.04)',
-                }}>
-                {/* Hover glow */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"
-                  style={{ background: 'linear-gradient(135deg, rgba(0,255,204,0.04) 0%, transparent 100%)' }} />
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: 'linear-gradient(180deg, transparent, #00ffcc40, transparent)' }} />
+                className="group relative flex items-center gap-4 md:gap-8 py-4 md:py-5 cursor-default
+                  transition-all duration-300 border-b border-white/[0.04] hover:border-white/[0.08]"
+                style={{}}>
 
-                <div className="relative">
-                  <div className="font-vhs text-[13px] text-white/40 group-hover:text-white/65
-                    transition-colors duration-300 truncate leading-tight mb-1">
+                {/* Hover background wash */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none -mx-4"
+                  style={{ background: 'linear-gradient(90deg, rgba(0,255,204,0.04) 0%, rgba(0,255,204,0.015) 40%, transparent 100%)' }} />
+
+                {/* Left accent on hover */}
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                  style={{ background: 'linear-gradient(180deg, transparent, #00ffcc, transparent)' }} />
+
+                {/* Number */}
+                <div className="shrink-0 w-8 text-right">
+                  <span className="font-vhs text-xs text-white/10 group-hover:text-primary/30 transition-colors duration-300">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                </div>
+
+                {/* Year */}
+                <div className="shrink-0 w-14 md:w-16">
+                  <span className="font-vhs text-sm md:text-base text-primary/50 group-hover:text-primary transition-colors duration-300 tabular-nums">
+                    {event.year}
+                  </span>
+                </div>
+
+                {/* Venue — the star */}
+                <div className="flex-1 min-w-0">
+                  <span className="font-vhs text-lg md:text-2xl text-white/60 group-hover:text-white
+                    transition-colors duration-300 truncate block tracking-wide leading-tight">
                     {event.venue}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-vhs text-[9px] text-white/15 group-hover:text-white/25 transition-colors">
-                      {event.city}
-                    </span>
-                    <span className="font-vhs text-[9px] text-primary/20 group-hover:text-primary/40 transition-colors">
-                      {event.year}
-                    </span>
-                  </div>
+                  </span>
+                </div>
+
+                {/* City — Country */}
+                <div className="hidden md:block shrink-0 text-right">
+                  <span className="font-vhs text-xs text-white/20 group-hover:text-white/45 transition-colors duration-300 tracking-widest">
+                    {event.city}
+                  </span>
+                  <span className="font-vhs text-xs text-white/10 group-hover:text-white/20 transition-colors duration-300 ml-2 tracking-widest">
+                    {event.country.toUpperCase()}
+                  </span>
+                </div>
+
+                {/* Trailing arrow on hover */}
+                <div className="shrink-0 w-6 text-right opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="font-vhs text-xs text-primary/50">›</span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Footer note */}
-          <div className="mt-8 text-center">
-            <span className="font-vhs text-[8px] text-white/[0.07] tracking-[0.4em]">
-              30+ YEARS // 40+ COUNTRIES // 1000+ EVENTS
-            </span>
+          {/* Stats footer */}
+          <div className="mt-12 pt-6 border-t border-white/[0.04]">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              {[
+                { value: '30+', label: 'YEARS' },
+                { value: '40+', label: 'COUNTRIES' },
+                { value: '1000+', label: 'EVENTS' },
+              ].map(({ value, label }) => (
+                <div key={label}>
+                  <div className="font-vhs text-2xl md:text-3xl text-white/70 mb-1">{value}</div>
+                  <div className="font-vhs text-[9px] text-white/15 tracking-[0.4em]">{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
