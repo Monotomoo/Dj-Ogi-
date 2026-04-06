@@ -76,7 +76,7 @@ export default function ContactSection() {
   const [emailHovered, setEmailHovered] = useState(false)
 
   return (
-    <section id="contact" className="relative py-24 overflow-hidden"
+    <section id="contact" className="relative pt-20 pb-10 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #040408 40%, #050510 60%, #000 100%)' }}>
 
       {/* Background ambience */}
@@ -199,7 +199,7 @@ export default function ContactSection() {
         {/* ── EMAIL CARD (full-width, same family as platform cards) ── */}
         <a
           href={`mailto:${bookingEmail}`}
-          className="relative rounded-xl overflow-hidden block mb-20"
+          className="relative rounded-xl overflow-hidden block mb-6"
           onMouseEnter={() => setEmailHovered(true)}
           onMouseLeave={() => setEmailHovered(false)}
           style={{
