@@ -59,7 +59,6 @@ function AnimatedCount({ target, color, inView }: { target: number; color: strin
   const [count, setCount] = useState(0)
   useEffect(() => {
     if (!inView) return
-    let start = 0
     const duration = 1200
     const t0 = performance.now()
     const tick = (now: number) => {
