@@ -1,234 +1,397 @@
+import { useState, useEffect, useRef } from 'react'
 import { labelLinks } from '../../data/socials'
 
 const LABEL_META: Record<string, {
   color: string
-  glow: string
+  rgb: string
   founded: string
-  releases: string
+  releases: number
   desc: string
   tagline: string
+  letter: string
 }> = {
   Technodrome: {
-    color: '#00ffcc',
-    glow: 'rgba(0,255,204,0.12)',
-    founded: '1998',
-    releases: '60+',
+    color: '#00ffcc', rgb: '0,255,204',
+    founded: '1998', releases: 60,
     desc: 'The flagship imprint where the original Rijeka hard techno sound was forged. Raw, relentless, uncompromising.',
-    tagline: 'FLAGSHIP',
+    tagline: 'FLAGSHIP LABEL', letter: 'T',
   },
   'Techno Factory': {
-    color: '#ff003c',
-    glow: 'rgba(255,0,60,0.12)',
-    founded: '2001',
-    releases: '80+',
+    color: '#ff003c', rgb: '255,0,60',
+    founded: '2001', releases: 80,
     desc: 'Industrial-grade techno built for warehouse floors. No fillers, no compromises — pure machine energy.',
-    tagline: 'INDUSTRIAL',
+    tagline: 'INDUSTRIAL', letter: 'TF',
   },
   'Dark Noise': {
-    color: '#9900ff',
-    glow: 'rgba(153,0,255,0.12)',
-    founded: '2005',
-    releases: '40+',
+    color: '#9900ff', rgb: '153,0,255',
+    founded: '2005', releases: 40,
     desc: 'The experimental arm. Dark atmospheres, raw texture, noise and deep hypnotic pressure.',
-    tagline: 'EXPERIMENTAL',
+    tagline: 'EXPERIMENTAL', letter: 'DN',
   },
   'Beast Music Records': {
-    color: '#ff6600',
-    glow: 'rgba(255,102,0,0.12)',
-    founded: '2008',
-    releases: '55+',
+    color: '#ff6600', rgb: '255,102,0',
+    founded: '2008', releases: 55,
     desc: 'High-energy rave weapons engineered for peak-time destruction. The crowd never had a chance.',
-    tagline: 'PEAK TIME',
+    tagline: 'PEAK TIME', letter: 'BM',
   },
   'Noisy Room': {
-    color: '#aaaaaa',
-    glow: 'rgba(170,170,170,0.08)',
-    founded: '2012',
-    releases: '30+',
+    color: '#cccccc', rgb: '204,204,204',
+    founded: '2012', releases: 30,
     desc: 'The underground side. Slow-burning, hypnotic and relentless. Four walls, no windows, no mercy.',
-    tagline: 'UNDERGROUND',
+    tagline: 'UNDERGROUND', letter: 'NR',
   },
 }
 
-export default function LabelsSection() {
+function useInView(threshold = 0.2) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true) }, { threshold })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [threshold])
+  return { ref, inView }
+}
+
+function AnimatedCount({ target, color, inView }: { target: number; color: string; inView: boolean }) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!inView) return
+    let start = 0
+    const duration = 1200
+    const t0 = performance.now()
+    const tick = (now: number) => {
+      const elapsed = now - t0
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.round(eased * target))
+      if (progress < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [inView, target])
   return (
-    <section className="px-4 md:px-8 py-20 bg-[#050505] relative overflow-hidden">
-      {/* Ambient background */}
+    <span className="font-vhs text-3xl md:text-4xl leading-none tabular-nums"
+      style={{ color, textShadow: `0 0 20px ${color}60` }}>
+      {count}+
+    </span>
+  )
+}
+
+export default function LabelsSection() {
+  const [hoveredLabel, setHoveredLabel] = useState<string | null>(null)
+  const headerVis = useInView(0.3)
+  const flagshipVis = useInView(0.2)
+  const gridVis = useInView(0.15)
+  const statsVis = useInView(0.3)
+
+  const otherLabels = labelLinks.filter(l => l.name !== 'Technodrome')
+
+  return (
+    <section className="relative py-24 overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #000 0%, #050508 30%, #080810 50%, #050508 70%, #000 100%)' }}>
+
+      {/* Ambient orbs */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute left-0 top-0 w-96 h-96 rounded-full opacity-[0.03]"
-          style={{ background: 'radial-gradient(circle, #00ffcc 0%, transparent 70%)', filter: 'blur(100px)' }} />
-        <div className="absolute right-0 bottom-0 w-96 h-96 rounded-full opacity-[0.03]"
-          style={{ background: 'radial-gradient(circle, #ff003c 0%, transparent 70%)', filter: 'blur(100px)' }} />
+        <div className="absolute left-[-10%] top-[20%] w-[500px] h-[500px] rounded-full opacity-[0.04]"
+          style={{ background: 'radial-gradient(circle, #00ffcc 0%, transparent 60%)', filter: 'blur(120px)' }} />
+        <div className="absolute right-[-10%] bottom-[20%] w-[500px] h-[500px] rounded-full opacity-[0.03]"
+          style={{ background: 'radial-gradient(circle, #ff003c 0%, transparent 60%)', filter: 'blur(120px)' }} />
+        <div className="absolute left-[40%] top-[50%] w-[400px] h-[400px] rounded-full opacity-[0.02]"
+          style={{ background: 'radial-gradient(circle, #9900ff 0%, transparent 60%)', filter: 'blur(100px)' }} />
       </div>
 
-      <div className="max-w-6xl mx-auto relative">
-        {/* Header */}
-        <div className="text-center mb-14">
-          <div className="font-vhs text-[9px] text-primary/30 tracking-[0.5em] mb-3">// DISCOGRAPHY</div>
-          <h2 className="font-vhs text-4xl md:text-6xl text-white rgb-split tracking-wider mb-4">THE LABELS</h2>
-          <p className="text-white/25 text-sm max-w-xl mx-auto leading-relaxed">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 relative">
+
+        {/* ── HEADER ── */}
+        <div ref={headerVis.ref}
+          className="text-center mb-20 transition-all duration-1000"
+          style={{
+            opacity: headerVis.inView ? 1 : 0,
+            transform: headerVis.inView ? 'translateY(0)' : 'translateY(30px)',
+          }}>
+          <div className="font-vhs text-[9px] text-primary/40 tracking-[0.6em] mb-4">// HIS IMPRINTS</div>
+          <h2 className="font-vhs text-5xl md:text-7xl text-white tracking-wider mb-5 rgb-split">THE LABELS</h2>
+          <p className="text-white/30 text-sm max-w-lg mx-auto leading-relaxed">
             30 years. 5 imprints. 265+ releases. Each label a different weapon in the same arsenal.
           </p>
-          <div className="mt-5 h-px w-40 mx-auto bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
+          <div className="mt-6 flex items-center justify-center gap-3">
+            {Object.values(LABEL_META).map(m => (
+              <div key={m.color} className="w-2 h-2 rounded-full"
+                style={{
+                  background: m.color,
+                  boxShadow: `0 0 8px ${m.color}80`,
+                  animation: 'labelDotPulse 2s ease-in-out infinite',
+                  animationDelay: `${Math.random() * 2}s`,
+                }} />
+            ))}
+          </div>
         </div>
 
-        {/* Featured label — Technodrome full-width */}
-        {(() => {
-          const flagship = labelLinks.find(l => l.name === 'Technodrome')
-          const meta = flagship ? LABEL_META['Technodrome'] : null
-          if (!flagship || !meta) return null
-          return (
-            <div className="relative rounded-2xl overflow-hidden mb-4 group"
-              style={{
-                background: 'linear-gradient(135deg, rgba(0,255,204,0.04) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.8) 100%)',
-                border: '1px solid rgba(0,255,204,0.08)',
-              }}>
-              {/* Big background label name */}
-              <div className="absolute inset-0 flex items-center justify-end pr-8 pointer-events-none overflow-hidden">
-                <span className="font-vhs text-[10rem] md:text-[14rem] text-white/[0.02] leading-none tracking-tight select-none">
-                  T
-                </span>
-              </div>
-
-              {/* Hover glow */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(0,255,204,0.06) 0%, transparent 60%)' }} />
-
-              <div className="relative p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-6">
-                {/* Left: label info */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-3 h-3 rounded-full bg-primary shadow-[0_0_12px_rgba(0,255,204,0.6)]" />
-                    <span className="font-vhs text-[9px] text-primary/50 tracking-[0.4em]">FLAGSHIP LABEL</span>
-                  </div>
-                  <h3 className="font-vhs text-3xl md:text-5xl text-primary tracking-wider mb-3"
-                    style={{ textShadow: '0 0 40px rgba(0,255,204,0.2)' }}>
-                    TECHNODROME
-                  </h3>
-                  <p className="text-white/35 text-sm leading-relaxed max-w-lg">{meta.desc}</p>
+        {/* ── FLAGSHIP: TECHNODROME ── */}
+        <div ref={flagshipVis.ref}
+          className="mb-5 transition-all duration-1000"
+          style={{
+            opacity: flagshipVis.inView ? 1 : 0,
+            transform: flagshipVis.inView ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.97)',
+            transitionDelay: '0.15s',
+          }}>
+          {(() => {
+            const meta = LABEL_META['Technodrome']
+            const isHov = hoveredLabel === 'Technodrome'
+            return (
+              <div className="group relative rounded-2xl overflow-hidden cursor-default"
+                onMouseEnter={() => setHoveredLabel('Technodrome')}
+                onMouseLeave={() => setHoveredLabel(null)}
+                style={{
+                  background: isHov
+                    ? 'linear-gradient(135deg, rgba(0,255,204,0.08) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.85) 100%)'
+                    : 'linear-gradient(135deg, rgba(0,255,204,0.04) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.8) 100%)',
+                  border: `1px solid rgba(0,255,204,${isHov ? '0.25' : '0.1'})`,
+                  boxShadow: isHov ? '0 0 60px rgba(0,255,204,0.1), 0 20px 60px rgba(0,0,0,0.5)' : '0 4px 30px rgba(0,0,0,0.4)',
+                  transition: 'all 0.5s ease',
+                }}>
+                {/* Giant background letter */}
+                <div className="absolute inset-0 flex items-center justify-end overflow-hidden pointer-events-none">
+                  <span className="font-vhs text-[16rem] md:text-[22rem] leading-none tracking-tight select-none"
+                    style={{
+                      color: 'transparent',
+                      WebkitTextStroke: isHov ? '1px rgba(0,255,204,0.08)' : '1px rgba(0,255,204,0.03)',
+                      transition: 'all 0.5s ease',
+                      transform: isHov ? 'translateX(-10px)' : 'translateX(0)',
+                      marginRight: '-2rem',
+                    }}>
+                    T
+                  </span>
                 </div>
 
-                {/* Right: stats */}
-                <div className="flex gap-8 md:flex-col md:gap-4 md:text-right">
-                  <div>
-                    <div className="font-vhs text-4xl md:text-5xl text-primary/70 leading-none"
-                      style={{ textShadow: '0 0 20px rgba(0,255,204,0.15)' }}>
-                      {meta.releases}
-                    </div>
-                    <div className="font-vhs text-[8px] text-white/15 tracking-widest mt-1">RELEASES</div>
-                  </div>
-                  <div>
-                    <div className="font-vhs text-4xl md:text-5xl text-primary/40 leading-none">{meta.founded}</div>
-                    <div className="font-vhs text-[8px] text-white/15 tracking-widest mt-1">FOUNDED</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom electric line */}
-              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent
-                opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-          )
-        })()}
-
-        {/* Other 4 labels — 2x2 grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {labelLinks
-            .filter(l => l.name !== 'Technodrome')
-            .map((label) => {
-              const meta = LABEL_META[label.name]
-              if (!meta) return null
-              return (
-                <div key={label.name}
-                  className="group relative rounded-xl overflow-hidden cursor-default"
+                {/* Animated border glow */}
+                <div className="absolute top-0 left-0 right-0 h-px"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.015) 0%, rgba(0,0,0,0.5) 100%)',
-                    border: '1px solid rgba(255,255,255,0.04)',
-                  }}>
-                  {/* Big ghost letter */}
-                  <div className="absolute top-0 right-4 pointer-events-none overflow-hidden h-full flex items-center">
-                    <span className="font-vhs text-[8rem] text-white/[0.025] leading-none select-none">
-                      {label.name[0]}
-                    </span>
-                  </div>
+                    background: isHov
+                      ? 'linear-gradient(90deg, transparent, #00ffcc, transparent)'
+                      : 'linear-gradient(90deg, transparent, rgba(0,255,204,0.2), transparent)',
+                    transition: 'background 0.5s ease',
+                  }} />
 
-                  {/* Hover glow */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                    style={{ background: `radial-gradient(ellipse at 0% 50%, ${meta.glow} 0%, transparent 60%)` }} />
-
-                  <div className="relative p-6">
-                    {/* Tagline */}
-                    <div className="font-vhs text-[8px] tracking-[0.4em] mb-3 transition-opacity"
-                      style={{ color: meta.color + '60' }}>
-                      {meta.tagline}
+                <div className="relative p-8 md:p-12 flex flex-col md:flex-row md:items-center gap-8">
+                  <div className="flex-1">
+                    {/* Badge */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-3 h-3 rounded-full"
+                        style={{
+                          background: '#00ffcc',
+                          boxShadow: '0 0 12px rgba(0,255,204,0.8), 0 0 24px rgba(0,255,204,0.4)',
+                          animation: 'labelDotPulse 2s ease-in-out infinite',
+                        }} />
+                      <span className="font-vhs text-[10px] text-primary/60 tracking-[0.5em]">FLAGSHIP LABEL</span>
                     </div>
 
                     {/* Name */}
-                    <h3 className="font-vhs text-lg md:text-xl tracking-wider mb-3 transition-all duration-300 group-hover:opacity-100"
-                      style={{ color: meta.color + 'cc' }}>
-                      {label.name.toUpperCase()}
+                    <h3 className="font-vhs text-4xl md:text-6xl tracking-wider mb-4"
+                      style={{
+                        color: '#00ffcc',
+                        textShadow: isHov
+                          ? '0 0 40px rgba(0,255,204,0.5), 0 0 80px rgba(0,255,204,0.2)'
+                          : '0 0 20px rgba(0,255,204,0.15)',
+                        transition: 'text-shadow 0.5s ease',
+                      }}>
+                      TECHNODROME
                     </h3>
 
-                    {/* Desc */}
-                    <p className="text-white/20 text-xs leading-relaxed mb-5 group-hover:text-white/35 transition-colors duration-300">
+                    <p className="text-sm leading-relaxed max-w-lg"
+                      style={{
+                        color: isHov ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.3)',
+                        transition: 'color 0.3s ease',
+                      }}>
                       {meta.desc}
                     </p>
-
-                    {/* Stats row */}
-                    <div className="flex items-end justify-between border-t pt-4"
-                      style={{ borderColor: meta.color + '15' }}>
-                      <div>
-                        <div className="font-vhs text-2xl leading-none"
-                          style={{ color: meta.color + '80', textShadow: `0 0 15px ${meta.color}20` }}>
-                          {meta.releases}
-                        </div>
-                        <div className="font-vhs text-[7px] text-white/10 tracking-widest mt-1">RELEASES</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-vhs text-lg leading-none text-white/20">{meta.founded}</div>
-                        <div className="font-vhs text-[7px] text-white/10 tracking-widest mt-1">FOUNDED</div>
-                      </div>
-                    </div>
                   </div>
 
-                  {/* Left color strip */}
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: `linear-gradient(180deg, transparent, ${meta.color}, transparent)` }} />
+                  {/* Stats */}
+                  <div className="flex gap-10 md:flex-col md:gap-6 md:text-right shrink-0">
+                    <div>
+                      <div className="font-vhs text-5xl md:text-6xl leading-none tabular-nums"
+                        style={{
+                          color: '#00ffcc',
+                          textShadow: isHov ? '0 0 30px rgba(0,255,204,0.7)' : '0 0 15px rgba(0,255,204,0.2)',
+                          transition: 'text-shadow 0.5s ease',
+                        }}>
+                        {meta.releases}+
+                      </div>
+                      <div className="font-vhs text-[9px] text-white/20 tracking-[0.4em] mt-1">RELEASES</div>
+                    </div>
+                    <div>
+                      <div className="font-vhs text-5xl md:text-6xl leading-none tabular-nums"
+                        style={{ color: 'rgba(0,255,204,0.35)' }}>
+                        {meta.founded}
+                      </div>
+                      <div className="font-vhs text-[9px] text-white/20 tracking-[0.4em] mt-1">FOUNDED</div>
+                    </div>
+                  </div>
                 </div>
-              )
-            })}
+
+                {/* Bottom glow */}
+                <div className="absolute bottom-0 left-0 right-0 h-px"
+                  style={{
+                    background: isHov
+                      ? 'linear-gradient(90deg, transparent, #00ffcc60, transparent)'
+                      : 'transparent',
+                    transition: 'background 0.5s ease',
+                  }} />
+              </div>
+            )
+          })()}
         </div>
 
-        {/* Total stat footer */}
-        <div className="mt-12 pt-8 border-t border-white/[0.05] relative">
-          {/* Glow line */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        {/* ── 4 LABELS GRID ── */}
+        <div ref={gridVis.ref} className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-16">
+          {otherLabels.map((label, idx) => {
+            const meta = LABEL_META[label.name]
+            if (!meta) return null
+            const isHov = hoveredLabel === label.name
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-0">
+            return (
+              <div key={label.name}
+                className="group relative rounded-xl overflow-hidden cursor-default"
+                onMouseEnter={() => setHoveredLabel(label.name)}
+                onMouseLeave={() => setHoveredLabel(null)}
+                style={{
+                  opacity: gridVis.inView ? 1 : 0,
+                  transform: gridVis.inView ? 'translateY(0)' : 'translateY(30px)',
+                  transition: `all 0.7s ease ${0.1 + idx * 0.12}s`,
+                  background: isHov
+                    ? `linear-gradient(135deg, rgba(${meta.rgb},0.07) 0%, rgba(0,0,0,0.6) 100%)`
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.5) 100%)',
+                  border: `1px solid rgba(${meta.rgb},${isHov ? '0.3' : '0.08'})`,
+                  boxShadow: isHov
+                    ? `0 0 40px rgba(${meta.rgb},0.12), 0 16px 48px rgba(0,0,0,0.5)`
+                    : '0 4px 20px rgba(0,0,0,0.3)',
+                }}>
+
+                {/* Background letter(s) */}
+                <div className="absolute top-0 right-2 bottom-0 flex items-center pointer-events-none overflow-hidden">
+                  <span className="font-vhs text-[9rem] md:text-[11rem] leading-none select-none"
+                    style={{
+                      color: 'transparent',
+                      WebkitTextStroke: `1px rgba(${meta.rgb},${isHov ? '0.08' : '0.03'})`,
+                      transition: 'all 0.5s ease',
+                      transform: isHov ? 'scale(1.05)' : 'scale(1)',
+                    }}>
+                    {meta.letter}
+                  </span>
+                </div>
+
+                {/* Left accent bar */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-500"
+                  style={{
+                    background: `linear-gradient(180deg, transparent, ${meta.color}, transparent)`,
+                    opacity: isHov ? 1 : 0.2,
+                    boxShadow: isHov ? `0 0 15px ${meta.color}60` : 'none',
+                  }} />
+
+                {/* Top glow */}
+                <div className="absolute top-0 left-0 right-0 h-px transition-all duration-500"
+                  style={{
+                    background: isHov
+                      ? `linear-gradient(90deg, ${meta.color}, transparent 60%)`
+                      : 'transparent',
+                  }} />
+
+                <div className="relative p-6 md:p-7 pl-7">
+                  {/* Tag */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                      style={{
+                        background: meta.color,
+                        boxShadow: isHov ? `0 0 8px ${meta.color}` : 'none',
+                      }} />
+                    <span className="font-vhs text-[8px] tracking-[0.5em]"
+                      style={{ color: `rgba(${meta.rgb},0.5)` }}>
+                      {meta.tagline}
+                    </span>
+                  </div>
+
+                  {/* Name */}
+                  <h3 className="font-vhs text-xl md:text-2xl tracking-wider mb-3"
+                    style={{
+                      color: meta.color,
+                      textShadow: isHov ? `0 0 25px rgba(${meta.rgb},0.5)` : 'none',
+                      transition: 'text-shadow 0.4s ease',
+                    }}>
+                    {label.name.toUpperCase()}
+                  </h3>
+
+                  {/* Desc */}
+                  <p className="text-xs leading-relaxed mb-5 max-w-sm"
+                    style={{
+                      color: isHov ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)',
+                      transition: 'color 0.3s ease',
+                    }}>
+                    {meta.desc}
+                  </p>
+
+                  {/* Stats */}
+                  <div className="flex items-end justify-between pt-4"
+                    style={{ borderTop: `1px solid rgba(${meta.rgb},${isHov ? '0.15' : '0.06'})`, transition: 'border-color 0.3s' }}>
+                    <div>
+                      <AnimatedCount target={meta.releases} color={meta.color} inView={gridVis.inView} />
+                      <div className="font-vhs text-[7px] text-white/15 tracking-[0.4em] mt-1">RELEASES</div>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-vhs text-2xl text-white/25 tabular-nums leading-none">{meta.founded}</span>
+                      <div className="font-vhs text-[7px] text-white/15 tracking-[0.4em] mt-1">FOUNDED</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* ── STAT FOOTER ── */}
+        <div ref={statsVis.ref}
+          className="pt-10 border-t border-white/[0.04] relative transition-all duration-1000"
+          style={{
+            opacity: statsVis.inView ? 1 : 0,
+            transform: statsVis.inView ? 'translateY(0)' : 'translateY(20px)',
+            transitionDelay: '0.2s',
+          }}>
+          {/* Top glow accent */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, #00ffcc40, transparent)' }} />
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0">
             {[
-              { val: '5', label: 'IMPRINTS', color: '#00ffcc' },
-              { val: '265+', label: 'TOTAL RELEASES', color: '#00ffcc' },
-              { val: '30', label: 'YEARS ACTIVE', color: '#00ffcc' },
-              { val: '1995', label: 'EST. RIJEKA', color: '#00ffcc' },
+              { val: 5, suffix: '', label: 'IMPRINTS', color: '#00ffcc' },
+              { val: 265, suffix: '+', label: 'TOTAL RELEASES', color: '#ff003c' },
+              { val: 30, suffix: '', label: 'YEARS ACTIVE', color: '#9900ff' },
+              { val: 1995, suffix: '', label: 'EST. RIJEKA', color: '#ff6600' },
             ].map((stat, i) => (
-              <div key={stat.label} className={`text-center py-4 ${i < 3 ? 'md:border-r border-white/[0.04]' : ''}`}>
-                <div
-                  className="font-vhs leading-none mb-2"
+              <div key={stat.label} className={`text-center py-4 ${i < 3 ? 'md:border-r md:border-white/[0.04]' : ''}`}>
+                <div className="font-vhs leading-none mb-2 tabular-nums"
                   style={{
                     fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
                     color: stat.color,
-                    opacity: 0.6,
-                    textShadow: `0 0 30px ${stat.color}25`,
-                  }}
-                >
-                  {stat.val}
+                    opacity: 0.75,
+                    textShadow: `0 0 30px ${stat.color}40`,
+                  }}>
+                  {stat.val}{stat.suffix}
                 </div>
-                <div className="font-vhs text-[9px] text-white/20 tracking-[0.35em]">{stat.label}</div>
+                <div className="font-vhs text-[9px] text-white/20 tracking-[0.4em]">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes labelDotPulse {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.4); }
+        }
+      `}</style>
     </section>
   )
 }
