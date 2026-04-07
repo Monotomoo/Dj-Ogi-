@@ -13,31 +13,31 @@ const LABEL_META: Record<string, {
   Technodrome: {
     color: '#00ffcc', rgb: '0,255,204',
     founded: '1998', releases: 60,
-    desc: 'The flagship imprint where the original Rijeka hard techno sound was forged. Raw, relentless, uncompromising.',
+    desc: 'The flagship imprint where the original Rijeka hard techno sound was forged. Born in the underground clubs of Croatia\'s port city, Technodrome became the launchpad for a generation of hard techno artists. Raw, relentless, uncompromising — every release is a statement that the dancefloor comes first.',
     tagline: 'FLAGSHIP LABEL', letter: 'T',
   },
   'Techno Factory': {
     color: '#ff003c', rgb: '255,0,60',
     founded: '2001', releases: 80,
-    desc: 'Industrial-grade techno built for warehouse floors. No fillers, no compromises — pure machine energy.',
+    desc: 'Industrial-grade techno built for warehouse floors. Techno Factory channels the raw power of machines into pounding kicks and distorted textures. No fillers, no compromises — pure mechanical energy designed to shake concrete walls and shatter speaker cones.',
     tagline: 'INDUSTRIAL', letter: 'TF',
   },
   'Dark Noise': {
     color: '#9900ff', rgb: '153,0,255',
     founded: '2005', releases: 40,
-    desc: 'The experimental arm. Dark atmospheres, raw texture, noise and deep hypnotic pressure.',
+    desc: 'The experimental arm. Dark Noise pushes into territories where most labels fear to go — thick atmospheres, raw noise textures, and deep hypnotic pressure that pulls you into a trance. Every release is a journey into the unknown corners of electronic music.',
     tagline: 'EXPERIMENTAL', letter: 'DN',
   },
   'Beast Music Records': {
     color: '#ff6600', rgb: '255,102,0',
     founded: '2008', releases: 55,
-    desc: 'High-energy rave weapons engineered for peak-time destruction. The crowd never had a chance.',
+    desc: 'High-energy rave weapons engineered for peak-time destruction. Beast Music Records is where the big room meets the underground — explosive drops, relentless grooves, and the kind of tracks that turn a crowd into a single moving organism. The crowd never had a chance.',
     tagline: 'PEAK TIME', letter: 'BM',
   },
   'Noisy Room': {
     color: '#cccccc', rgb: '204,204,204',
     founded: '2012', releases: 30,
-    desc: 'The underground side. Slow-burning, hypnotic and relentless. Four walls, no windows, no mercy.',
+    desc: 'The underground side. Noisy Room strips techno back to its essence — slow-burning, hypnotic, and relentless. Inspired by the after-hours warehouse scene, these tracks are built for four walls, no windows, and no mercy. Minimal light, maximum impact.',
     tagline: 'UNDERGROUND', letter: 'NR',
   },
 }
@@ -113,7 +113,7 @@ export default function LabelsSection() {
           }}>
           <div className="font-vhs text-[9px] text-primary/40 tracking-[0.6em] mb-4">// HIS IMPRINTS</div>
           <h2 className="font-vhs text-5xl md:text-7xl text-white tracking-wider mb-5 rgb-split">THE LABELS</h2>
-          <p className="text-white/30 text-sm max-w-lg mx-auto leading-relaxed">
+          <p className="text-white/60 text-sm max-w-lg mx-auto leading-relaxed">
             30 years. 5 imprints. 265+ releases. Each label a different weapon in the same arsenal.
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
@@ -202,7 +202,7 @@ export default function LabelsSection() {
 
                     <p className="text-sm leading-relaxed max-w-lg"
                       style={{
-                        color: isHov ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.3)',
+                        color: isHov ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.7)',
                         transition: 'color 0.3s ease',
                       }}>
                       {meta.desc}
@@ -324,9 +324,9 @@ export default function LabelsSection() {
                   </h3>
 
                   {/* Desc */}
-                  <p className="text-xs leading-relaxed mb-5 max-w-sm"
+                  <p className="text-xs leading-relaxed mb-5"
                     style={{
-                      color: isHov ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)',
+                      color: isHov ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.65)',
                       transition: 'color 0.3s ease',
                     }}>
                     {meta.desc}
