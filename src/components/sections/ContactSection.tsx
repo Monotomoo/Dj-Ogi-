@@ -112,8 +112,8 @@ export default function ContactSection() {
                   padding: '1.5rem 1rem',
                   background: isHov
                     ? `rgba(${platform.rgb}, 0.09)`
-                    : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${isHov ? platform.color + '50' : 'rgba(255,255,255,0.05)'}`,
+                    : 'rgba(255,255,255,0.035)',
+                  border: `1px solid ${isHov ? platform.color + '50' : 'rgba(255,255,255,0.08)'}`,
                   transform: isHov ? 'translateY(-10px)' : 'translateY(0)',
                   boxShadow: isHov
                     ? `0 24px 60px rgba(${platform.rgb}, 0.3), 0 0 40px rgba(${platform.rgb}, 0.12), inset 0 1px 0 rgba(${platform.rgb}, 0.2)`
@@ -148,7 +148,7 @@ export default function ContactSection() {
                 <div
                   className="flex justify-center items-center mb-4"
                   style={{
-                    color: isHov ? platform.color : 'rgba(255,255,255,0.25)',
+                    color: isHov ? platform.color : `rgba(${platform.rgb},0.55)`,
                     transform: isHov ? 'scale(1.18)' : 'scale(1)',
                     filter: isHov ? `drop-shadow(0 0 10px ${platform.color}90)` : 'none',
                     transition: 'color 0.3s, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s',
@@ -161,7 +161,7 @@ export default function ContactSection() {
                 <div
                   className="font-vhs text-[11px] leading-snug mb-1.5"
                   style={{
-                    color: isHov ? '#fff' : 'rgba(255,255,255,0.35)',
+                    color: isHov ? '#fff' : 'rgba(255,255,255,0.65)',
                     transition: 'color 0.3s ease',
                     letterSpacing: '0.1em',
                   }}
@@ -173,7 +173,7 @@ export default function ContactSection() {
                 <div
                   className="font-vhs text-[8px] tracking-widest"
                   style={{
-                    color: isHov ? `rgba(${platform.rgb}, 0.8)` : 'rgba(255,255,255,0.1)',
+                    color: isHov ? `rgba(${platform.rgb}, 0.8)` : 'rgba(255,255,255,0.25)',
                     transition: 'color 0.3s ease',
                   }}
                 >
