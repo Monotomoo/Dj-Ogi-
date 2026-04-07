@@ -1,15 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
 
+// Grid layout (4 cols):
+// Row 1: hero(2x2) + portrait(2x2)  → fills 4 cols, 2 rows
+// Row 3: blue(2x1) + eco(1x1) + crowd(1x1)  → fills 4 cols
+// Row 4: red(2x1) + warehouse(1x1) + stage(1x1)  → fills 4 cols
+// Row 5: energetika(full 4x1)  → fills 4 cols
 const PHOTOS = [
-  { src: '/gallery/portrait-decks.jpg', caption: 'ECLIPSE // RIJEKA 2024', size: 'hero' },
-  { src: '/gallery/portrait-hero.jpg', caption: 'PROMO SHOOT // 2024', size: 'tall' },
-  { src: '/gallery/club-blue.jpg', caption: 'CLUB SET // BLUE HOUR', size: 'wide' },
-  { src: '/gallery/eco-festival.jpg', caption: 'ECO FESTIVAL // MAIN STAGE', size: 'normal' },
-  { src: '/gallery/crowd-wild.jpg', caption: 'CROWD CONTROL // RAW ENERGY', size: 'normal' },
-  { src: '/gallery/club-red.jpg', caption: 'DJ OGI // RED ROOM', size: 'wide' },
-  { src: '/gallery/warehouse.jpg', caption: 'WAREHOUSE SESSION // INDUSTRIAL', size: 'tall' },
-  { src: '/gallery/stage-visuals.jpg', caption: 'LED VISUALS // ECLIPSE', size: 'normal' },
-  { src: '/gallery/energetika.jpg', caption: 'ENERGETIKA // CLUB NIGHT', size: 'normal' },
+  { src: '/gallery/portrait-decks.jpg', caption: 'ECLIPSE // RIJEKA 2024', span: 'col-span-2 row-span-2' },
+  { src: '/gallery/portrait-hero.jpg', caption: 'PROMO SHOOT // 2024', span: 'col-span-2 row-span-2' },
+  { src: '/gallery/club-blue.jpg', caption: 'CLUB SET // BLUE HOUR', span: 'col-span-2' },
+  { src: '/gallery/eco-festival.jpg', caption: 'ECO FESTIVAL // MAIN STAGE', span: '' },
+  { src: '/gallery/crowd-wild.jpg', caption: 'CROWD CONTROL // RAW ENERGY', span: '' },
+  { src: '/gallery/club-red.jpg', caption: 'DJ OGI // RED ROOM', span: 'col-span-2' },
+  { src: '/gallery/warehouse.jpg', caption: 'WAREHOUSE SESSION // INDUSTRIAL', span: '' },
+  { src: '/gallery/stage-visuals.jpg', caption: 'LED VISUALS // ECLIPSE', span: '' },
+  { src: '/gallery/energetika.jpg', caption: 'ENERGETIKA // CLUB NIGHT', span: 'col-span-4' },
 ]
 
 function VHSTimestamp() {
@@ -91,7 +96,7 @@ export default function GallerySection() {
         </div>
 
         {/* ── MASONRY GRID ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-16 auto-rows-[180px] md:auto-rows-[220px]"
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-16 auto-rows-[160px] md:auto-rows-[200px]"
           style={{
             opacity: inView ? 1 : 0,
             transform: inView ? 'translateY(0)' : 'translateY(30px)',
@@ -99,10 +104,7 @@ export default function GallerySection() {
           }}>
           {PHOTOS.map((photo, i) => {
             const isHov = hoveredIdx === i
-            const spanClass =
-              photo.size === 'hero' ? 'col-span-2 row-span-2' :
-              photo.size === 'tall' ? 'row-span-2' :
-              photo.size === 'wide' ? 'col-span-2' : ''
+            const spanClass = photo.span
 
             return (
               <div
