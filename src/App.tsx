@@ -4,6 +4,7 @@ import EventsSection from './components/sections/EventsSection'
 import MixerSection from './components/sections/MixerSection'
 import BioSection from './components/sections/BioSection'
 import LabelsSection from './components/sections/LabelsSection'
+import GallerySection from './components/sections/GallerySection'
 import ContactSection from './components/sections/ContactSection'
 import FooterSection from './components/sections/FooterSection'
 import VHSOverlay from './components/vhs/VHSOverlay'
@@ -67,6 +68,7 @@ function App() {
         <ContactSection />
         <EventsSection />
         <MixerSection />
+        <GallerySection />
         <BioSection />
         <LabelsSection />
         <FooterSection />
