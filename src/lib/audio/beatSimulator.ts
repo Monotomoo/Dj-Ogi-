@@ -71,6 +71,3 @@ export function stopBeatSimulator() {
   }
 }
 
-export function getBeatCount() {
-  return beatCount
-}

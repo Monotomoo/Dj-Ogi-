@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
 const HEADLINES = [
   'RIJEKA, CROATIA',
@@ -18,9 +18,7 @@ const BOOT_LINES = [
   'SIGNAL LOCKED',
 ]
 
-// V1: font-vhs (VCR OSD Mono) — classic VHS monospace
-// V2: Orbitron — geometric, futuristic, electronic
-const HERO_FONT = "'Orbitron', sans-serif" // V2
+const HERO_FONT = "'Orbitron', sans-serif"
 
 export default function HeroSection() {
   const [phase, setPhase] = useState(0)
@@ -30,9 +28,13 @@ export default function HeroSection() {
   const [bootLine, setBootLine] = useState(0)
   const [typedText, setTypedText] = useState('')
   const [showCursor, setShowCursor] = useState(true)
-  const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef<number>(0)
+
+  // Stable random values for tracking bars and HUD bars (avoid Math.random in render)
+  const trackingBarHeights = useMemo(() => Array.from({ length: 6 }, () => 3 + Math.random() * 4), [])
+  const hudBarHeights = useMemo(() => Array.from({ length: 12 }, () => 4 + Math.random() * 8), [])
+  const hudBarDurations = useMemo(() => Array.from({ length: 12 }, () => 0.3 + Math.random() * 0.4), [])
 
   // Animated frequency bars in background
   useEffect(() => {
@@ -143,7 +145,6 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      ref={sectionRef}
       className="section flex items-center justify-center relative bg-black overflow-hidden"
     >
       {/* ── PORTRAIT BACKGROUND with eye emphasis ── */}
@@ -258,7 +259,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="absolute w-full" style={{
-              height: `${3 + Math.random() * 4}px`,
+              height: `${trackingBarHeights[i]}px`,
               top: `${15 * i + 8}%`,
               background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)',
               animation: `heroTrackingBar ${0.6 + i * 0.12}s ${i * 0.08}s linear infinite`,
@@ -414,9 +415,9 @@ export default function HeroSection() {
             {[...Array(12)].map((_, i) => (
               <div key={i} className="w-1 rounded-sm"
                 style={{
-                  height: `${4 + Math.random() * 8}px`,
+                  height: `${hudBarHeights[i]}px`,
                   background: i < 8 ? `rgba(0,255,204,${0.2 + i * 0.06})` : `rgba(255,0,60,${0.3 + (i - 8) * 0.15})`,
-                  animation: `heroBarPulse ${0.3 + Math.random() * 0.4}s ease-in-out infinite alternate`,
+                  animation: `heroBarPulse ${hudBarDurations[i]}s ease-in-out infinite alternate`,
                   animationDelay: `${i * 0.05}s`,
                 }} />
             ))}
@@ -436,7 +437,8 @@ export default function HeroSection() {
       {/* Skip */}
       {phase > 0 && phase < 4 && (
         <button onClick={skipToReady}
-          className="absolute bottom-6 right-6 z-30 font-vhs text-[10px] text-white/20 hover:text-primary/60 transition-colors tracking-widest">
+          className="absolute bottom-6 right-6 z-30 font-vhs text-[10px] text-white/20 hover:text-primary/60 transition-colors tracking-widest"
+          aria-label="Skip intro animation">
           SKIP &gt;&gt;
         </button>
       )}

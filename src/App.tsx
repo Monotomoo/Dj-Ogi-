@@ -65,17 +65,17 @@ function App() {
       )}
 
       <main>
-        <HeroSection />          {/* 1. Hero */}
+        <HeroSection />
         <PressMarquee />
-        <ContactSection />        {/* 2. Links */}
-        <EventsSection />         {/* 3. Live + Highlights */}
-        <MixerSection />          {/* 4. Player */}
-        <VinylSection />          {/* 5. The Vault */}
-        <GallerySection />        {/* 6. Gallery */}
-        <BioSection />            {/* 7. Story */}
-        <HighlightsSection />     {/* 8. Highlights */}
-        <LabelsSection />         {/* 8. Labels */}
-        <FooterSection />         {/* 9. Contact / Footer */}
+        <ContactSection />
+        <EventsSection />
+        <MixerSection />
+        <VinylSection />
+        <GallerySection />
+        <BioSection />
+        <HighlightsSection />
+        <LabelsSection />
+        <FooterSection />
       </main>
     </>
   )

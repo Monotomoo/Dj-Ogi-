@@ -48,6 +48,18 @@ export default function GallerySection() {
     return () => obs.disconnect()
   }, [])
 
+  // Escape key to close lightbox + arrow keys to navigate
+  useEffect(() => {
+    if (activePhoto === null) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActivePhoto(null)
+      else if (e.key === 'ArrowRight') setActivePhoto(prev => prev !== null ? Math.min(PHOTOS.length - 1, prev + 1) : null)
+      else if (e.key === 'ArrowLeft') setActivePhoto(prev => prev !== null ? Math.max(0, prev - 1) : null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [activePhoto])
+
   // Auto-scroll filmstrip
   useEffect(() => {
     const strip = stripRef.current
@@ -150,7 +162,7 @@ export default function GallerySection() {
                 {isHov && (
                   <div className="absolute left-0 right-0 h-1 pointer-events-none"
                     style={{
-                      top: `${30 + Math.random() * 40}%`,
+                      top: `${30 + (i * 7) % 40}%`,
                       background: 'rgba(0,255,204,0.15)',
                       animation: 'galleryGlitchBar 0.15s steps(2) infinite',
                     }} />

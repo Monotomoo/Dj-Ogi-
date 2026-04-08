@@ -122,7 +122,7 @@ export default function LabelsSection() {
                   background: m.color,
                   boxShadow: `0 0 8px ${m.color}80`,
                   animation: 'labelDotPulse 2s ease-in-out infinite',
-                  animationDelay: `${Math.random() * 2}s`,
+                  animationDelay: `${Object.values(LABEL_META).indexOf(m) * 0.4}s`,
                 }} />
             ))}
           </div>

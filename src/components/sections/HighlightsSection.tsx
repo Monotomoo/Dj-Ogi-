@@ -16,7 +16,7 @@ export default function HighlightsSection() {
           <div className="flex items-end justify-between mb-3">
             <div>
               <div className="font-vhs text-[9px] text-primary/40 tracking-[0.5em] mb-2">// CAREER ARCHIVE</div>
-              <h3 className="font-vhs text-3xl md:text-4xl text-white tracking-wider">HIGHLIGHTS</h3>
+              <h2 className="font-vhs text-3xl md:text-4xl text-white tracking-wider">HIGHLIGHTS</h2>
             </div>
             <div className="text-right">
               <div className="font-vhs text-4xl md:text-5xl text-white/5 leading-none select-none">30</div>

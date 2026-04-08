@@ -134,16 +134,6 @@ export default function TrackCard({ track, compact = false }: TrackCardProps) {
           </div>
         </div>
 
-        <style>{`
-          @keyframes cardShimmer {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-          }
-          @keyframes deckFlash {
-            0% { opacity: 1; }
-            100% { opacity: 0; }
-          }
-        `}</style>
       </div>
     )
   }

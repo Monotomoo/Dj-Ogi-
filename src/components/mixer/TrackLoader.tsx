@@ -16,6 +16,7 @@ export default function TrackLoader({ deckId, onSelect }: TrackLoaderProps) {
     <div className="relative">
       <select
         onChange={(e) => onSelect(Number(e.target.value))}
+        aria-label={`Select track for Deck ${deckId}`}
         className={`w-full bg-black/60 border ${borderColor} rounded-md px-3 py-2
           font-vhs text-[11px] text-white/60 appearance-none cursor-pointer
           outline-none transition-all ring-0 ${focusRing} focus:ring-1`}

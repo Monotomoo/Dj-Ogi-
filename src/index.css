@@ -196,6 +196,16 @@ body {
   animation: strobe 0.18s steps(1) infinite;
 }
 
+/* ========= TRACK CARD ANIMATIONS ========= */
+@keyframes cardShimmer {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+@keyframes deckFlash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ========= REDUCED MOTION ========= */
 @media (prefers-reduced-motion: reduce) {
   .vhs-overlay::after, .vhs-noise, .vhs-flicker { display: none !important; }

@@ -84,7 +84,7 @@ export default function Deck({ deckId }: DeckProps) {
       {/* ── MAIN AREA: Vinyl + Info ── */}
       <div className="flex items-start gap-4">
         {/* Vinyl */}
-        <VinylRecord isPlaying={deck.isPlaying} color={color} position={deck.position} />
+        <VinylRecord isPlaying={deck.isPlaying} color={color} />
 
         {/* Info column */}
         <div className="flex-1 min-w-0 space-y-2 pt-1">

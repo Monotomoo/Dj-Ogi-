@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { bioEntries } from '../../data/bio'
 
 export default function BioSection() {
@@ -18,24 +18,34 @@ export default function BioSection() {
     return () => obs.disconnect()
   }, [])
 
-  const switchTo = (i: number) => {
-    if (i === activeIndex) return
-    setTransitioning(true)
-    setActiveIndex(i)
-    setTimeout(() => {
-      setDisplayIndex(i)
-      setTransitioning(false)
-    }, 300)
-  }
+  const switchTo = useCallback((i: number) => {
+    setActiveIndex(prev => {
+      if (i === prev) return prev
+      setTransitioning(true)
+      setTimeout(() => {
+        setDisplayIndex(i)
+        setTransitioning(false)
+      }, 300)
+      return i
+    })
+  }, [])
 
   // Auto-advance every 6s
   useEffect(() => {
     if (!inView) return
     const interval = setInterval(() => {
-      switchTo((activeIndex + 1) % bioEntries.length)
+      setActiveIndex(prev => {
+        const next = (prev + 1) % bioEntries.length
+        setTransitioning(true)
+        setTimeout(() => {
+          setDisplayIndex(next)
+          setTransitioning(false)
+        }, 300)
+        return next
+      })
     }, 6000)
     return () => clearInterval(interval)
-  }, [inView, activeIndex])
+  }, [inView])
 
   const progressPct = ((activeIndex) / (bioEntries.length - 1)) * 100
 

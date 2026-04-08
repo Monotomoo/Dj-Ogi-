@@ -3,10 +3,9 @@ import { useRef, useEffect } from 'react'
 interface VinylRecordProps {
   isPlaying: boolean
   color: string
-  position: number
 }
 
-export default function VinylRecord({ isPlaying, color, position }: VinylRecordProps) {
+export default function VinylRecord({ isPlaying, color }: VinylRecordProps) {
   const rotationRef = useRef(0)
   const animRef = useRef<number>(0)
   const discRef = useRef<HTMLDivElement>(null)
@@ -74,17 +73,6 @@ export default function VinylRecord({ isPlaying, color, position }: VinylRecordP
         ))}
       </div>
 
-      {/* Progress ring */}
-      <svg className="absolute inset-0 w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-        <circle
-          cx="40" cy="40" r="38"
-          fill="none"
-          stroke={color}
-          strokeWidth="1.5"
-          strokeDasharray={`${position * 238.76} 238.76`}
-          opacity="0.4"
-        />
-      </svg>
     </div>
   )
 }
