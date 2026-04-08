@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
 const HEADLINES = [
-  'THE MACHINE',
   'RIJEKA, CROATIA',
   'SINCE 1995',
   '300+ TRACKS',
   'LOVE PARADE BERLIN',
   'TECHNODROME',
   'BEAST MUSIC',
+  '30 YEARS DEEP',
 ]
 
 const BOOT_LINES = [
@@ -152,54 +152,91 @@ export default function HeroSection() {
           opacity: phase >= 3 ? 1 : 0,
           transition: 'opacity 2s ease',
         }}>
-        {/* Base image — very dark, desaturated, blue-tinted */}
+        {/* Base image — dark, desaturated, blue-tinted */}
         <img
           src="/gallery/portrait-hero.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            filter: 'brightness(0.28) saturate(0.3) contrast(1.2) hue-rotate(170deg)',
+            filter: 'brightness(0.22) saturate(0.3) contrast(1.2) hue-rotate(170deg)',
             objectPosition: 'center 25%',
           }}
           aria-hidden="true"
         />
 
-        {/* Eye reveal — radial bright spot over the eye area */}
+        {/* Eye reveal — radial bright spot */}
         <div className="absolute inset-0"
           style={{
-            background: `
-              radial-gradient(ellipse 40% 30% at 50% 30%,
-                transparent 0%,
-                rgba(0,0,0,0.15) 40%,
-                rgba(0,0,0,0.7) 100%)
-            `,
+            background: `radial-gradient(ellipse 40% 30% at 50% 30%, transparent 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.7) 100%)`,
           }} />
 
-        {/* Second brighter image layer masked to eye area only */}
+        {/* Bright eye layer — pulsing */}
         <img
           src="/gallery/portrait-hero.jpg"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none hero-eye-pulse"
           style={{
-            filter: 'brightness(0.55) saturate(0.5) contrast(1.4) hue-rotate(160deg)',
+            filter: 'brightness(0.7) saturate(0.6) contrast(1.6) hue-rotate(160deg)',
             objectPosition: 'center 25%',
-            maskImage: 'radial-gradient(ellipse 28% 20% at 50% 30%, black 0%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 28% 20% at 50% 30%, black 0%, transparent 100%)',
+            maskImage: 'radial-gradient(ellipse 25% 14% at 50% 28%, black 0%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 25% 14% at 50% 28%, black 0%, transparent 100%)',
           }}
           aria-hidden="true"
         />
 
-        {/* Cyan glow around eye area */}
-        <div className="absolute inset-0 pointer-events-none"
+        {/* Cyan glow halo — breathing around the eyes */}
+        <div className="absolute inset-0 pointer-events-none hero-eye-glow"
           style={{
-            background: 'radial-gradient(ellipse 35% 25% at 50% 30%, rgba(0,255,204,0.08) 0%, transparent 100%)',
+            background: 'radial-gradient(ellipse 30% 18% at 50% 28%, rgba(0,255,204,0.15) 0%, transparent 100%)',
+          }} />
+
+        {/* VHS glitch bands — horizontal noise lines over the portrait */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[12, 27, 34, 58, 71, 83].map((top, i) => (
+            <div key={i} className="absolute left-0 right-0 hero-glitch-band"
+              style={{
+                top: `${top}%`,
+                height: `${1 + (i % 3)}px`,
+                background: i % 2 === 0
+                  ? 'linear-gradient(90deg, transparent 10%, rgba(0,255,204,0.07) 30%, rgba(255,0,60,0.05) 70%, transparent 90%)'
+                  : 'rgba(255,255,255,0.02)',
+                animationDelay: `${i * 1.3}s`,
+              }} />
+          ))}
+        </div>
+
+        {/* Falling data rain — matrix-style, very subtle */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden"
+          style={{
+            maskImage: 'radial-gradient(ellipse 50% 40% at 50% 35%, black 0%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 35%, black 0%, transparent 100%)',
+          }}>
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="absolute hero-data-drop font-vhs"
+              style={{
+                left: `${5 + (i * 4.7) % 90}%`,
+                top: '-20px',
+                fontSize: '9px',
+                color: `rgba(0,255,204,${0.04 + (i % 5) * 0.015})`,
+                animationDelay: `${(i * 0.7) % 5}s`,
+                animationDuration: `${3 + (i % 4)}s`,
+              }}>
+              {['0', '1', 'A', 'F', '/', '\\', '|', '#', ':', '.'][i % 10]}
+            </div>
+          ))}
+        </div>
+
+        {/* Chromatic split flash — red/cyan edge bleeds that flicker */}
+        <div className="absolute inset-0 pointer-events-none hero-chroma-flash"
+          style={{
+            boxShadow: 'inset 3px 0 20px rgba(0,255,204,0.04), inset -3px 0 20px rgba(255,0,60,0.04)',
           }} />
 
         {/* Bottom fade to black */}
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5) 75%, #000 100%)' }} />
 
-        {/* Side vignettes — subtle */}
+        {/* Side vignettes */}
         <div className="absolute inset-0"
           style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 40%, transparent 0%, rgba(0,0,0,0.4) 100%)' }} />
       </div>
@@ -207,9 +244,14 @@ export default function HeroSection() {
       {/* Ambient frequency bars */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-[1]" style={{ opacity: phase >= 3 ? 0.6 : 0, transition: 'opacity 1s ease' }} />
 
-      {/* CRT Power-on circle wipe */}
+      {/* CRT Power-on circle wipe — fades out after boot to reveal portrait */}
       <div className="absolute inset-0 bg-[#0a0a0c] transition-all ease-out z-[2]"
-        style={{ clipPath: phase >= 1 ? 'circle(150% at 50% 50%)' : 'circle(0% at 50% 50%)', transitionDuration: '0.6s' }} />
+        style={{
+          clipPath: phase >= 1 ? 'circle(150% at 50% 50%)' : 'circle(0% at 50% 50%)',
+          opacity: phase >= 3 ? 0 : 1,
+          transitionDuration: phase >= 3 ? '1.5s' : '0.6s',
+          pointerEvents: phase >= 3 ? 'none' : 'auto',
+        }} />
 
       {/* VHS tracking bars during boot */}
       {phase >= 1 && phase < 3 && (
@@ -329,7 +371,7 @@ export default function HeroSection() {
           style={{ transitionDelay: '0.5s' }}>
           {[
             { val: '30+', label: 'YEARS' },
-            { val: '300+', label: 'TRACKS' },
+            { val: '80+', label: 'VINYL RECORDS' },
             { val: '5', label: 'LABELS' },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
@@ -419,6 +461,58 @@ export default function HeroSection() {
         @keyframes heroBarPulse {
           0% { transform: scaleY(0.6); }
           100% { transform: scaleY(1.3); }
+        }
+
+        /* Eye pulse — slow breathing brightness */
+        .hero-eye-pulse {
+          animation: heroEyePulse 4s ease-in-out infinite;
+        }
+        @keyframes heroEyePulse {
+          0%, 100% { opacity: 0.7; }
+          50% { opacity: 1; }
+        }
+
+        /* Cyan glow halo breathing */
+        .hero-eye-glow {
+          animation: heroEyeGlow 4s ease-in-out infinite;
+        }
+        @keyframes heroEyeGlow {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        /* Glitch bands — horizontal jitter */
+        .hero-glitch-band {
+          animation: heroGlitchBand 6s steps(3) infinite;
+        }
+        @keyframes heroGlitchBand {
+          0%, 85%, 100% { opacity: 0; transform: translateX(0); }
+          87% { opacity: 1; transform: translateX(-3px); }
+          89% { opacity: 0.6; transform: translateX(5px); }
+          91% { opacity: 0.3; transform: translateX(-1px); }
+          93% { opacity: 0; transform: translateX(0); }
+        }
+
+        /* Matrix-style data drops */
+        .hero-data-drop {
+          animation: heroDataDrop 4s linear infinite;
+        }
+        @keyframes heroDataDrop {
+          0% { transform: translateY(0); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(calc(100vh + 20px)); opacity: 0; }
+        }
+
+        /* Chromatic edge flash */
+        .hero-chroma-flash {
+          animation: heroChromaFlash 8s ease-in-out infinite;
+        }
+        @keyframes heroChromaFlash {
+          0%, 80%, 100% { opacity: 0.3; }
+          85% { opacity: 1; box-shadow: inset 4px 0 30px rgba(0,255,204,0.08), inset -4px 0 30px rgba(255,0,60,0.08); }
+          88% { opacity: 0.5; }
+          90% { opacity: 1; box-shadow: inset -2px 0 15px rgba(0,255,204,0.06), inset 2px 0 15px rgba(255,0,60,0.06); }
         }
       `}</style>
     </section>

@@ -5,6 +5,8 @@ import MixerSection from './components/sections/MixerSection'
 import BioSection from './components/sections/BioSection'
 import LabelsSection from './components/sections/LabelsSection'
 import GallerySection from './components/sections/GallerySection'
+import HighlightsSection from './components/sections/HighlightsSection'
+import VinylSection from './components/sections/VinylSection'
 import ContactSection from './components/sections/ContactSection'
 import FooterSection from './components/sections/FooterSection'
 import VHSOverlay from './components/vhs/VHSOverlay'
@@ -63,15 +65,17 @@ function App() {
       )}
 
       <main>
-        <HeroSection />
+        <HeroSection />          {/* 1. Hero */}
         <PressMarquee />
-        <ContactSection />
-        <EventsSection />
-        <MixerSection />
-        <GallerySection />
-        <BioSection />
-        <LabelsSection />
-        <FooterSection />
+        <ContactSection />        {/* 2. Links */}
+        <EventsSection />         {/* 3. Live + Highlights */}
+        <MixerSection />          {/* 4. Player */}
+        <VinylSection />          {/* 5. The Vault */}
+        <GallerySection />        {/* 6. Gallery */}
+        <BioSection />            {/* 7. Story */}
+        <HighlightsSection />     {/* 8. Highlights */}
+        <LabelsSection />         {/* 8. Labels */}
+        <FooterSection />         {/* 9. Contact / Footer */}
       </main>
     </>
   )

@@ -40,7 +40,7 @@ export default function BioSection() {
   const progressPct = ((activeIndex) / (bioEntries.length - 1)) * 100
 
   return (
-    <section id="bio" ref={sectionRef} className="relative py-24 overflow-hidden"
+    <section id="bio" ref={sectionRef} className="relative pt-12 pb-24 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #050508 30%, #080810 50%, #050508 70%, #000 100%)' }}>
 
       {/* Ambient */}
@@ -61,8 +61,29 @@ export default function BioSection() {
             transition: 'all 0.8s ease',
           }}>
           <div className="font-vhs text-[9px] text-primary/40 tracking-[0.6em] mb-4">// BIOGRAPHY</div>
-          <h2 className="font-vhs text-5xl md:text-7xl text-white tracking-wider rgb-split mb-4">THE STORY</h2>
-          <p className="text-white/40 text-sm tracking-wide">Three decades of hard techno. One city. One sound.</p>
+          <h2 className="font-vhs text-5xl md:text-7xl text-white tracking-wider rgb-split mb-6">THE STORY</h2>
+          <p className="text-white/60 text-sm md:text-base leading-relaxed max-w-3xl mx-auto mb-4">
+            In 1995, in the port city of Rijeka — where cranes tower over the Adriatic and concrete meets salt air —
+            a kid walked into a room full of machines and never walked out. No music school. No connections. No scene to plug into.
+            Just a four-track recorder, a stack of imported vinyl, and the unshakable belief that this city deserved its own sound.
+          </p>
+          <p className="text-white/50 text-sm leading-relaxed max-w-3xl mx-auto mb-4">
+            While the rest of Croatia looked to Zagreb, DJ Ogi built something from nothing. He didn't wait for permission.
+            He pressed his own records. Founded his own labels. Booked his own nights. Turned abandoned warehouses into
+            temples of sound and made a generation of kids fall in love with four-to-the-floor at 145 BPM.
+          </p>
+          <p className="text-white/50 text-sm leading-relaxed max-w-3xl mx-auto mb-4">
+            The records traveled further than anyone expected. Berlin came calling. Love Parade. Dance Valley.
+            Clubs in London, São Paulo, Bogotá, Kiev. And then the moment that confirmed everything — Aphex Twin,
+            the most unpredictable mind in electronic music, dropped a DJ Ogi track in his set. No email. No promo push.
+            The music just found its way to the right ears.
+          </p>
+          <p className="text-white/45 text-sm leading-relaxed max-w-3xl mx-auto">
+            Three decades later, the machines are still running. Five labels. 80+ vinyl records pressed.
+            Hundreds of tracks released. But the address hasn't changed. Rijeka. The same port city, the same
+            salt air, the same stubborn belief that hard techno doesn't need to be polished — it needs to be honest.
+            DJ Ogi never chased a trend. He just kept making the sound he believed in, and the world came to listen.
+          </p>
         </div>
 
         {/* ── TIMELINE BAR ── */}

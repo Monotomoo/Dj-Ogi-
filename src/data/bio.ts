@@ -9,54 +9,54 @@ export const bioEntries: BioEntry[] = [
     year: 1995,
     title: 'THE BEGINNING',
     description:
-      'DJ Ogi enters the Croatian electronic music scene and founds the Rijeka techno movement. From the industrial port city, a new sound emerges.',
+      'A teenager in Rijeka discovers techno through pirate radio and imported vinyl. No scene exists yet — so he builds one. First DJ sets in makeshift clubs and abandoned spaces along the Adriatic coast. The Rijeka sound is born in concrete and salt air.',
   },
   {
     year: 1998,
-    title: 'FIRST VINYL RELEASES',
+    title: 'FIRST WAX',
     description:
-      'First vinyl releases on renowned labels: Submission, Planet Rhythm, Compressed, and Patterns. The signature pumping hard techno sound takes shape.',
+      'The debut vinyl lands on Submission, followed by releases on Planet Rhythm, Compressed, and Patterns — labels that defined European hard techno. Record shops in Berlin and London stock the releases. A kid from Croatia now sits in crates next to the scene\'s biggest names.',
   },
   {
     year: 2002,
-    title: 'INTERNATIONAL BREAKTHROUGH',
+    title: 'LOVE PARADE',
     description:
-      'Sets at Love Parade Berlin, Dance Valley Netherlands, and clubs across Europe. The world discovers Croatian hard techno.',
+      'The call comes from Berlin. DJ Ogi plays Love Parade to a million people, then Dance Valley in the Netherlands, then clubs across the continent. What started in Rijeka\'s warehouses now shakes the biggest stages in Europe. Croatian hard techno is no longer a secret.',
   },
   {
     year: 2005,
-    title: 'BEAST MUSIC RECORDS',
+    title: 'BUILDING THE EMPIRE',
     description:
-      'Together with Daniel Gloomy, launches Beast Music Records - a platform for both newcomers and leading hard techno producers.',
+      'Together with Daniel Gloomy, Beast Music Records is born — not just a label, but a platform. A home for newcomers and established producers alike. Dark Noise follows for the experimental side. The vision expands: not one sound, but a family of sounds, all rooted in Rijeka.',
   },
   {
     year: 2008,
-    title: 'LABEL EMPIRE',
+    title: 'FIVE LABELS DEEP',
     description:
-      'Builds a network of labels: Techno Factory, Noisy Room, Technodrome, Dark Noise. Each one with its own distinct sonic identity.',
+      'Technodrome. Techno Factory. Dark Noise. Beast Music Records. Noisy Room. Five imprints, each with its own DNA — from industrial pounding to hypnotic slow-burns. Over 200 releases and counting. DJ Ogi isn\'t just an artist anymore, he\'s an institution.',
   },
   {
     year: 2012,
-    title: 'GLOBAL TOURING',
+    title: 'NO BORDERS',
     description:
-      'From Lov.e in Sao Paolo to Factory in London, from Cinema in Kiev to Fabrik in Ostrava. Hard techno has no borders.',
+      'From Lov.e in São Paulo to Factory in London, from Cinema in Kiev to Fabrik in Ostrava, from Bogotá to Barcelona. Hard techno speaks every language. The passport fills up but the studio address stays the same — Rijeka, Croatia.',
   },
   {
     year: 2018,
-    title: 'APHEX TWIN PLAYS OGI',
+    title: 'APHEX TWIN MOMENT',
     description:
-      'Productions recognized by the one and only Aphex Twin, who plays DJ Ogi tracks in his sets. A nod from a legend.',
+      'The most iconic moment in a career full of them. Aphex Twin — the godfather of experimental electronic music — plays a DJ Ogi track live. No promo, no connections. The music found its way to the most discerning ears in the world. Some things you can\'t manufacture.',
   },
   {
     year: 2022,
     title: 'BACK TO THE OLD SCHOOL',
     description:
-      'Releases "Back to the Old School Vol. Nr6" - a celebration of techno roots that proves the original sound still hits hardest.',
+      'While the world chases the next trend, DJ Ogi goes back to where it all started. "Back to the Old School Vol. Nr6" is a love letter to the raw, unpolished sound of early techno. Proof that the original recipe still hits the hardest when you never forgot the ingredients.',
   },
   {
     year: 2025,
-    title: '30 YEARS OF TECHNO',
+    title: '30 YEARS. SAME FIRE.',
     description:
-      'Three decades of relentless beats. 300+ tracks. Countless dancefloors destroyed. The Rijeka machine never stops.',
+      'Three decades and the needle hasn\'t lifted. 80+ vinyl records pressed. Five labels running. Dancefloors destroyed across four continents. The machines in Rijeka are still warm. The sound is still honest. The fire that started in 1995 hasn\'t dimmed — it just got louder.',
   },
 ]

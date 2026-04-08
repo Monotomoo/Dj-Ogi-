@@ -5,7 +5,7 @@ const sections = [
   { id: 'contact', label: 'LINKS' },
   { id: 'events', label: 'LIVE' },
   { id: 'mixer', label: 'MIX' },
-  { id: 'bio', label: 'BIO' },
+  { id: 'bio', label: 'STORY' },
 ]
 
 export default function Navigation() {
