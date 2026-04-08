@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
 const HEADLINES = [
-  'HARD TECHNO',
+  'THE MACHINE',
   'RIJEKA, CROATIA',
   'SINCE 1995',
   '300+ TRACKS',
@@ -158,7 +158,7 @@ export default function HeroSection() {
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            filter: 'brightness(0.12) saturate(0.25) contrast(1.3) sepia(0.1) hue-rotate(180deg)',
+            filter: 'brightness(0.28) saturate(0.3) contrast(1.2) hue-rotate(170deg)',
             objectPosition: 'center 25%',
           }}
           aria-hidden="true"
@@ -168,10 +168,10 @@ export default function HeroSection() {
         <div className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(ellipse 35% 25% at 50% 30%,
+              radial-gradient(ellipse 40% 30% at 50% 30%,
                 transparent 0%,
-                rgba(0,0,0,0.3) 40%,
-                rgba(0,0,0,0.85) 100%)
+                rgba(0,0,0,0.15) 40%,
+                rgba(0,0,0,0.7) 100%)
             `,
           }} />
 
@@ -181,10 +181,10 @@ export default function HeroSection() {
           alt=""
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           style={{
-            filter: 'brightness(0.35) saturate(0.4) contrast(1.5) hue-rotate(160deg)',
+            filter: 'brightness(0.55) saturate(0.5) contrast(1.4) hue-rotate(160deg)',
             objectPosition: 'center 25%',
-            maskImage: 'radial-gradient(ellipse 22% 16% at 50% 30%, black 0%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 22% 16% at 50% 30%, black 0%, transparent 100%)',
+            maskImage: 'radial-gradient(ellipse 28% 20% at 50% 30%, black 0%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 28% 20% at 50% 30%, black 0%, transparent 100%)',
           }}
           aria-hidden="true"
         />
@@ -192,16 +192,16 @@ export default function HeroSection() {
         {/* Cyan glow around eye area */}
         <div className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse 30% 20% at 50% 30%, rgba(0,255,204,0.06) 0%, transparent 100%)',
+            background: 'radial-gradient(ellipse 35% 25% at 50% 30%, rgba(0,255,204,0.08) 0%, transparent 100%)',
           }} />
 
         {/* Bottom fade to black */}
         <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.7) 70%, #000 100%)' }} />
+          style={{ background: 'linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5) 75%, #000 100%)' }} />
 
-        {/* Side vignettes */}
+        {/* Side vignettes — subtle */}
         <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 40%, transparent 0%, rgba(0,0,0,0.6) 100%)' }} />
+          style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 40%, transparent 0%, rgba(0,0,0,0.4) 100%)' }} />
       </div>
 
       {/* Ambient frequency bars */}
