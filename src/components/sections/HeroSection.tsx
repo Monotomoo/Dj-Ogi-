@@ -18,6 +18,10 @@ const BOOT_LINES = [
   'SIGNAL LOCKED',
 ]
 
+// V1: font-vhs (VCR OSD Mono) — classic VHS monospace
+// V2: Orbitron — geometric, futuristic, electronic
+const HERO_FONT = "'Orbitron', sans-serif" // V2
+
 export default function HeroSection() {
   const [phase, setPhase] = useState(0)
   const [headlineIndex, setHeadlineIndex] = useState(0)
@@ -50,46 +54,39 @@ export default function HeroSection() {
     const draw = (t: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       const w = canvas.width / barCount
-
       for (let i = 0; i < barCount; i++) {
         const val = (Math.sin(t * 0.001 + phases[i]) * 0.5 + 0.5) *
                     (Math.sin(t * 0.0007 + i * 0.3) * 0.3 + 0.7)
         const h = val * canvas.height * 0.45
         const x = i * w
-
-        // Cyan bars left half, red bars right half, blend in middle
         const ratio = i / barCount
         const r = Math.round(ratio * 255)
         const g = Math.round((1 - ratio) * 255 * 0.8)
         const b = Math.round((1 - ratio) * 204 + ratio * 60)
-        ctx.fillStyle = `rgba(${r},${g},${b},0.04)`
+        ctx.fillStyle = `rgba(${r},${g},${b},0.03)`
         ctx.fillRect(x, canvas.height - h, w - 1, h)
       }
-
       rafRef.current = requestAnimationFrame(draw)
     }
     rafRef.current = requestAnimationFrame(draw)
-    return () => {
-      cancelAnimationFrame(rafRef.current)
-      window.removeEventListener('resize', resize)
-    }
+    return () => { cancelAnimationFrame(rafRef.current); window.removeEventListener('resize', resize) }
   }, [phase])
 
-  // Boot sequence — tighter, more dramatic
+  // Boot sequence
   useEffect(() => {
     const t: ReturnType<typeof setTimeout>[] = []
-    t.push(setTimeout(() => setPhase(1), 300))    // CRT on
-    t.push(setTimeout(() => setPhase(2), 900))    // boot text starts
+    t.push(setTimeout(() => setPhase(1), 300))
+    t.push(setTimeout(() => setPhase(2), 900))
     t.push(setTimeout(() => setBootLine(1), 1200))
     t.push(setTimeout(() => setBootLine(2), 1500))
     t.push(setTimeout(() => setBootLine(3), 1800))
     t.push(setTimeout(() => setBootLine(4), 2100))
-    t.push(setTimeout(() => setPhase(3), 2600))   // main reveal
-    t.push(setTimeout(() => setPhase(4), 3400))   // fully live
+    t.push(setTimeout(() => setPhase(3), 2600))
+    t.push(setTimeout(() => setPhase(4), 3400))
     return () => t.forEach(clearTimeout)
   }, [])
 
-  // Typewriter effect for "DJ OGI" during phase 3
+  // Typewriter for "DJ OGI"
   useEffect(() => {
     if (phase < 3) return
     const full = 'DJ OGI'
@@ -149,17 +146,70 @@ export default function HeroSection() {
       ref={sectionRef}
       className="section flex items-center justify-center relative bg-black overflow-hidden"
     >
+      {/* ── PORTRAIT BACKGROUND with eye emphasis ── */}
+      <div className="absolute inset-0 z-0"
+        style={{
+          opacity: phase >= 3 ? 1 : 0,
+          transition: 'opacity 2s ease',
+        }}>
+        {/* Base image — very dark, desaturated, blue-tinted */}
+        <img
+          src="/gallery/portrait-hero.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            filter: 'brightness(0.12) saturate(0.25) contrast(1.3) sepia(0.1) hue-rotate(180deg)',
+            objectPosition: 'center 25%',
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Eye reveal — radial bright spot over the eye area */}
+        <div className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(ellipse 35% 25% at 50% 30%,
+                transparent 0%,
+                rgba(0,0,0,0.3) 40%,
+                rgba(0,0,0,0.85) 100%)
+            `,
+          }} />
+
+        {/* Second brighter image layer masked to eye area only */}
+        <img
+          src="/gallery/portrait-hero.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{
+            filter: 'brightness(0.35) saturate(0.4) contrast(1.5) hue-rotate(160deg)',
+            objectPosition: 'center 25%',
+            maskImage: 'radial-gradient(ellipse 22% 16% at 50% 30%, black 0%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 22% 16% at 50% 30%, black 0%, transparent 100%)',
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Cyan glow around eye area */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 30% 20% at 50% 30%, rgba(0,255,204,0.06) 0%, transparent 100%)',
+          }} />
+
+        {/* Bottom fade to black */}
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.7) 70%, #000 100%)' }} />
+
+        {/* Side vignettes */}
+        <div className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 40%, transparent 0%, rgba(0,0,0,0.6) 100%)' }} />
+      </div>
+
       {/* Ambient frequency bars */}
-      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" style={{ opacity: phase >= 3 ? 1 : 0, transition: 'opacity 1s ease' }} />
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-[1]" style={{ opacity: phase >= 3 ? 0.6 : 0, transition: 'opacity 1s ease' }} />
 
       {/* CRT Power-on circle wipe */}
-      <div
-        className="absolute inset-0 bg-[#0a0a0c] transition-all ease-out"
-        style={{
-          clipPath: phase >= 1 ? 'circle(150% at 50% 50%)' : 'circle(0% at 50% 50%)',
-          transitionDuration: '0.6s',
-        }}
-      />
+      <div className="absolute inset-0 bg-[#0a0a0c] transition-all ease-out z-[2]"
+        style={{ clipPath: phase >= 1 ? 'circle(150% at 50% 50%)' : 'circle(0% at 50% 50%)', transitionDuration: '0.6s' }} />
 
       {/* VHS tracking bars during boot */}
       {phase >= 1 && phase < 3 && (
@@ -168,33 +218,32 @@ export default function HeroSection() {
             <div key={i} className="absolute w-full" style={{
               height: `${3 + Math.random() * 4}px`,
               top: `${15 * i + 8}%`,
-              background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)`,
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)',
               animation: `heroTrackingBar ${0.6 + i * 0.12}s ${i * 0.08}s linear infinite`,
             }} />
           ))}
         </div>
       )}
 
-      {/* Horizontal scan line that sweeps continuously */}
+      {/* Continuous scan line */}
       {phase >= 3 && (
         <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
           <div className="absolute left-0 right-0 h-[2px]"
             style={{
-              background: 'linear-gradient(90deg, transparent, rgba(0,255,204,0.08), transparent)',
+              background: 'linear-gradient(90deg, transparent, rgba(0,255,204,0.06), transparent)',
               animation: 'heroScanLine 4s linear infinite',
             }} />
         </div>
       )}
 
-      {/* Boot terminal text */}
+      {/* Boot terminal */}
       {phase >= 2 && phase < 4 && (
         <div className="absolute top-16 left-6 md:left-10 z-20 space-y-1">
           {BOOT_LINES.slice(0, bootLine + 1).map((line, i) => (
             <div key={i} className="font-vhs text-[10px] tracking-widest"
               style={{
                 color: i === bootLine ? 'rgba(0,255,204,0.6)' : 'rgba(0,255,204,0.2)',
-                opacity: 1,
-                animation: `bootFadeIn 0.3s ease`,
+                animation: 'bootFadeIn 0.3s ease',
               }}>
               {'>'} {line}
             </div>
@@ -205,7 +254,7 @@ export default function HeroSection() {
       {/* ── MAIN CONTENT ── */}
       <div className={`relative z-20 text-center px-4 transition-all duration-700 ${phase >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
-        {/* Date badge above name */}
+        {/* Date badge */}
         <div className={`transition-all duration-500 ${phase >= 4 ? 'opacity-100' : 'opacity-0'}`}>
           <div className="inline-block px-4 py-1 rounded-full mb-6"
             style={{ border: '1px solid rgba(0,255,204,0.15)', background: 'rgba(0,255,204,0.04)' }}>
@@ -213,19 +262,25 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* DJ OGI — massive typewriter reveal */}
-        <h1 className="font-vhs text-[20vw] md:text-[16vw] lg:text-[13vw] leading-[0.82] tracking-[0.12em] text-white relative inline-block"
+        {/* DJ OGI — V2: Orbitron, geometric, futuristic */}
+        <h1 className="relative inline-block leading-[0.85]"
           style={{
+            fontFamily: HERO_FONT,
+            fontSize: 'clamp(4rem, 18vw, 14rem)',
+            fontWeight: 900,
+            letterSpacing: '0.06em',
+            color: '#fff',
             textShadow: phase >= 4
-              ? '0 0 80px rgba(0,255,204,0.15), 0 0 160px rgba(0,255,204,0.08)'
+              ? '0 0 60px rgba(0,255,204,0.2), 0 0 120px rgba(0,255,204,0.08)'
               : 'none',
             transition: 'text-shadow 1.5s ease',
           }}>
           {/* Red ghost (RGB split) */}
           <span className="absolute inset-0 pointer-events-none select-none" aria-hidden
             style={{
+              fontFamily: HERO_FONT,
               color: 'transparent',
-              textShadow: phase >= 4 ? '-3px 0 rgba(255,0,60,0.4)' : 'none',
+              textShadow: phase >= 4 ? '-3px 1px rgba(255,0,60,0.35)' : 'none',
               transition: 'text-shadow 0.5s ease',
             }}>
             {typedText}
@@ -233,31 +288,30 @@ export default function HeroSection() {
           {/* Cyan ghost */}
           <span className="absolute inset-0 pointer-events-none select-none" aria-hidden
             style={{
+              fontFamily: HERO_FONT,
               color: 'transparent',
-              textShadow: phase >= 4 ? '3px 0 rgba(0,255,204,0.4)' : 'none',
+              textShadow: phase >= 4 ? '3px -1px rgba(0,255,204,0.35)' : 'none',
               transition: 'text-shadow 0.5s ease',
             }}>
             {typedText}
           </span>
           {/* Actual text */}
           {typedText}
-          {/* Blinking cursor */}
+          {/* Cursor during typing */}
           {phase === 3 && (
-            <span className="font-vhs text-primary" style={{ opacity: showCursor ? 1 : 0 }}>_</span>
+            <span className="text-primary" style={{ opacity: showCursor ? 1 : 0, fontFamily: "'VCR OSD Mono', monospace", fontSize: '0.6em' }}>_</span>
           )}
         </h1>
 
         {/* Underline glow */}
-        <div className={`mx-auto mt-3 h-[2px] rounded-full transition-all duration-1000 ease-out ${phase >= 4 ? 'w-64 opacity-100' : 'w-0 opacity-0'}`}
-          style={{ background: 'linear-gradient(90deg, transparent, #00ffcc, transparent)', boxShadow: '0 0 12px rgba(0,255,204,0.6)' }} />
+        <div className={`mx-auto mt-4 h-[2px] rounded-full transition-all duration-1000 ease-out ${phase >= 4 ? 'w-72 opacity-100' : 'w-0 opacity-0'}`}
+          style={{ background: 'linear-gradient(90deg, transparent, #00ffcc, transparent)', boxShadow: '0 0 15px rgba(0,255,204,0.6)' }} />
 
         {/* Rotating headline */}
-        <div className="h-16 md:h-20 flex items-center justify-center mt-4 overflow-hidden">
+        <div className="h-16 md:h-20 flex items-center justify-center mt-5 overflow-hidden">
           {phase >= 4 && (
             <div className={`font-vhs text-2xl md:text-4xl lg:text-5xl tracking-[0.2em] transition-all duration-400 ${
-              headlineVisible
-                ? 'opacity-100 translate-y-0 blur-0'
-                : 'opacity-0 translate-y-6 blur-sm'
+              headlineVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-6 blur-sm'
             }`}
             style={{
               background: 'linear-gradient(135deg, #00ffcc 0%, #ffffff 50%, #ff003c 100%)',
@@ -298,7 +352,6 @@ export default function HeroSection() {
       </div>
 
       {/* ── HUD CORNERS ── */}
-      {/* Top-left: REC */}
       {phase >= 4 && (
         <div className="absolute top-5 left-5 z-20 flex items-center gap-2">
           <span className="rec-dot w-2 h-2 rounded-full bg-accent inline-block shadow-[0_0_8px_#ff003c]" />
@@ -306,14 +359,12 @@ export default function HeroSection() {
         </div>
       )}
 
-      {/* Top-right: timecode */}
       {phase >= 4 && (
         <div className="absolute top-5 right-5 z-20 font-vhs text-[11px] text-white/30 tracking-wider tabular-nums">
           {timecode}
         </div>
       )}
 
-      {/* Bottom-left: channel/freq */}
       {phase >= 4 && (
         <div className="absolute bottom-5 left-5 z-20">
           <div className="font-vhs text-[8px] text-white/10 tracking-[0.4em]">CH-01 // 145.00 BPM</div>
@@ -331,7 +382,6 @@ export default function HeroSection() {
         </div>
       )}
 
-      {/* Bottom-right: date stamp */}
       {phase >= 4 && (
         <div className="absolute bottom-5 right-5 z-20 text-right">
           <div className="font-vhs text-[8px] text-white/10 tracking-[0.3em]">
@@ -341,7 +391,7 @@ export default function HeroSection() {
         </div>
       )}
 
-      {/* Skip button */}
+      {/* Skip */}
       {phase > 0 && phase < 4 && (
         <button onClick={skipToReady}
           className="absolute bottom-6 right-6 z-30 font-vhs text-[10px] text-white/20 hover:text-primary/60 transition-colors tracking-widest">
