@@ -155,12 +155,12 @@ export default function HeroSection() {
         }}>
         {/* Base image — dark, desaturated, blue-tinted */}
         <img
-          src="/gallery/portrait-hero.jpg"
+          src="/gallery/portrait-decks.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{
             filter: 'brightness(0.22) saturate(0.3) contrast(1.2) hue-rotate(170deg)',
-            objectPosition: 'center 25%',
+            objectPosition: 'center 35%',
           }}
           aria-hidden="true"
         />
@@ -168,19 +168,19 @@ export default function HeroSection() {
         {/* Eye reveal — radial bright spot */}
         <div className="absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 40% 30% at 50% 30%, transparent 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.7) 100%)`,
+            background: `radial-gradient(ellipse 40% 30% at 50% 38%, transparent 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.7) 100%)`,
           }} />
 
         {/* Bright eye layer — pulsing */}
         <img
-          src="/gallery/portrait-hero.jpg"
+          src="/gallery/portrait-decks.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover pointer-events-none hero-eye-pulse"
           style={{
             filter: 'brightness(0.7) saturate(0.6) contrast(1.6) hue-rotate(160deg)',
-            objectPosition: 'center 25%',
-            maskImage: 'radial-gradient(ellipse 25% 14% at 50% 28%, black 0%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 25% 14% at 50% 28%, black 0%, transparent 100%)',
+            objectPosition: 'center 35%',
+            maskImage: 'radial-gradient(ellipse 25% 14% at 50% 36%, black 0%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 25% 14% at 50% 36%, black 0%, transparent 100%)',
           }}
           aria-hidden="true"
         />
@@ -188,7 +188,7 @@ export default function HeroSection() {
         {/* Cyan glow halo — breathing around the eyes */}
         <div className="absolute inset-0 pointer-events-none hero-eye-glow"
           style={{
-            background: 'radial-gradient(ellipse 30% 18% at 50% 28%, rgba(0,255,204,0.15) 0%, transparent 100%)',
+            background: 'radial-gradient(ellipse 30% 18% at 50% 36%, rgba(0,255,204,0.15) 0%, transparent 100%)',
           }} />
 
         {/* VHS glitch bands — horizontal noise lines over the portrait */}
