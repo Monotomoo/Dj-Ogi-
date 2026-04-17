@@ -5,7 +5,7 @@ export default function EventsSection() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
   return (
-    <section id="events" className="relative py-24 overflow-hidden"
+    <section id="events" className="relative pt-24 pb-12 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #04040a 40%, #060610 60%, #000 100%)' }}>
 
       {/* Background ambience */}
@@ -128,6 +128,11 @@ export default function EventsSection() {
                       <div className="font-vhs text-[10px] px-5 py-3 rounded tracking-widest text-center
                         border border-white/10 text-white/20 cursor-not-allowed">
                         SOLD OUT
+                      </div>
+                    ) : !event.ticketUrl || event.ticketUrl === '#' ? (
+                      <div className="font-vhs text-[10px] px-5 py-3 rounded tracking-widest text-center
+                        border border-white/15 text-white/40 cursor-default">
+                        COMING SOON
                       </div>
                     ) : (
                       <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
