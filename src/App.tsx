@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import HeroSection from './components/sections/HeroSection'
 import EventsSection from './components/sections/EventsSection'
-import MixerSection from './components/sections/MixerSection'
+// import MixerSection from './components/sections/MixerSection' // hidden until tracks selected
 import BioSection from './components/sections/BioSection'
 import LabelsSection from './components/sections/LabelsSection'
 import GallerySection from './components/sections/GallerySection'
 import HighlightsSection from './components/sections/HighlightsSection'
-import VinylSection from './components/sections/VinylSection'
+// import VinylSection from './components/sections/VinylSection' // hidden until tracks selected
 import ContactSection from './components/sections/ContactSection'
 import FooterSection from './components/sections/FooterSection'
 import VHSOverlay from './components/vhs/VHSOverlay'
@@ -69,8 +69,9 @@ function App() {
         <PressMarquee />
         <ContactSection />
         <EventsSection />
-        <MixerSection />
-        <VinylSection />
+        {/* Hidden until tracks are selected: */}
+        {/* <MixerSection /> */}
+        {/* <VinylSection /> */}
         <GallerySection />
         <BioSection />
         <HighlightsSection />

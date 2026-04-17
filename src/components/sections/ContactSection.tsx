@@ -61,7 +61,7 @@ const platforms = [
   {
     name: 'Bandcamp',
     tagline: 'DIRECT SUPPORT',
-    url: 'https://djogi.bandcamp.com',
+    url: 'https://dj-ogi.bandcamp.com',
     color: '#1da0c3',
     rgb: '29,160,195',
     icon: (
