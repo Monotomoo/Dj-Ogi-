@@ -6,7 +6,7 @@ export interface BioEntry {
 
 export const bioEntries: BioEntry[] = [
   {
-    year: 1995,
+    year: 1994,
     title: 'THE BEGINNING',
     description:
       'A teenager in Rijeka discovers techno through pirate radio and imported vinyl. No scene exists yet — so he builds one. First DJ sets in makeshift clubs and abandoned spaces along the Adriatic coast. The Rijeka sound is born in concrete and salt air.',
@@ -57,6 +57,6 @@ export const bioEntries: BioEntry[] = [
     year: 2025,
     title: '30 YEARS. SAME FIRE.',
     description:
-      'Three decades and the needle hasn\'t lifted. 80+ vinyl records pressed. Five labels running. Dancefloors destroyed across four continents. The machines in Rijeka are still warm. The sound is still honest. The fire that started in 1995 hasn\'t dimmed — it just got louder.',
+      'Three decades and the needle hasn\'t lifted. 80+ vinyl records pressed. Five labels running. Dancefloors destroyed across four continents. The machines in Rijeka are still warm. The sound is still honest. The fire that started in 1994 hasn\'t dimmed — it just got louder.',
   },
 ]

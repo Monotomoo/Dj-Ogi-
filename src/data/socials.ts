@@ -11,4 +11,4 @@ export const labelLinks: LabelLink[] = [
   { name: 'Noisy Room', url: '#' },
 ]
 
-export const bookingEmail = 'booking@djogi.com'
+export const bookingEmail = 'booking@dj-ogi.com'

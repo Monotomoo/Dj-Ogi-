@@ -73,7 +73,7 @@ export default function BioSection() {
           <div className="font-vhs text-[9px] text-primary/40 tracking-[0.6em] mb-4">// BIOGRAPHY</div>
           <h2 className="font-vhs text-5xl md:text-7xl text-white tracking-wider rgb-split mb-6">THE STORY</h2>
           <p className="text-white/60 text-sm md:text-base leading-relaxed max-w-3xl mx-auto mb-4">
-            In 1995, in the port city of Rijeka — where cranes tower over the Adriatic and concrete meets salt air —
+            In 1994, in the port city of Rijeka — where cranes tower over the Adriatic and concrete meets salt air —
             a kid walked into a room full of machines and never walked out. No music school. No connections. No scene to plug into.
             Just a four-track recorder, a stack of imported vinyl, and the unshakable belief that this city deserved its own sound.
           </p>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
 const HEADLINES = [
   'RIJEKA, CROATIA',
-  'SINCE 1995',
+  'SINCE 1994',
   '300+ TRACKS',
   'LOVE PARADE BERLIN',
   'TECHNODROME',
@@ -301,7 +301,7 @@ export default function HeroSection() {
         <div className={`transition-all duration-500 ${phase >= 4 ? 'opacity-100' : 'opacity-0'}`}>
           <div className="inline-block px-4 py-1 rounded-full mb-6"
             style={{ border: '1px solid rgba(0,255,204,0.15)', background: 'rgba(0,255,204,0.04)' }}>
-            <span className="font-vhs text-[10px] text-primary/60 tracking-[0.5em]">EST. 1995 // RIJEKA</span>
+            <span className="font-vhs text-[10px] text-primary/60 tracking-[0.5em]">EST. 1994 // RIJEKA</span>
           </div>
         </div>
 

@@ -12,25 +12,25 @@ const LABEL_META: Record<string, {
 }> = {
   Technodrome: {
     color: '#00ffcc', rgb: '0,255,204',
-    founded: '1998', releases: 60,
+    founded: '2013', releases: 100,
     desc: 'The flagship imprint where the original Rijeka hard techno sound was forged. Born in the underground clubs of Croatia\'s port city, Technodrome became the launchpad for a generation of hard techno artists. Raw, relentless, uncompromising — every release is a statement that the dancefloor comes first.',
     tagline: 'FLAGSHIP LABEL', letter: 'T',
   },
   'Techno Factory': {
     color: '#ff003c', rgb: '255,0,60',
-    founded: '2001', releases: 80,
+    founded: '2011', releases: 100,
     desc: 'Industrial-grade techno built for warehouse floors. Techno Factory channels the raw power of machines into pounding kicks and distorted textures. No fillers, no compromises — pure mechanical energy designed to shake concrete walls and shatter speaker cones.',
     tagline: 'INDUSTRIAL', letter: 'TF',
   },
   'Dark Noise': {
     color: '#9900ff', rgb: '153,0,255',
-    founded: '2005', releases: 40,
+    founded: '2021', releases: 40,
     desc: 'The experimental arm. Dark Noise pushes into territories where most labels fear to go — thick atmospheres, raw noise textures, and deep hypnotic pressure that pulls you into a trance. Every release is a journey into the unknown corners of electronic music.',
     tagline: 'EXPERIMENTAL', letter: 'DN',
   },
   'Beast Music Records': {
     color: '#ff6600', rgb: '255,102,0',
-    founded: '2008', releases: 55,
+    founded: '2006', releases: 12,
     desc: 'High-energy rave weapons engineered for peak-time destruction. Beast Music Records is where the big room meets the underground — explosive drops, relentless grooves, and the kind of tracks that turn a crowd into a single moving organism. The crowd never had a chance.',
     tagline: 'PEAK TIME', letter: 'BM',
   },
@@ -366,7 +366,7 @@ export default function LabelsSection() {
               { val: 5, suffix: '', label: 'IMPRINTS', color: '#00ffcc' },
               { val: 265, suffix: '+', label: 'TOTAL RELEASES', color: '#ff003c' },
               { val: 30, suffix: '', label: 'YEARS ACTIVE', color: '#9900ff' },
-              { val: 1995, suffix: '', label: 'EST. RIJEKA', color: '#ff6600' },
+              { val: 1994, suffix: '', label: 'EST. RIJEKA', color: '#ff6600' },
             ].map((stat, i) => (
               <div key={stat.label} className={`text-center py-4 ${i < 3 ? 'md:border-r md:border-white/[0.04]' : ''}`}>
                 <div className="font-vhs leading-none mb-2 tabular-nums"
