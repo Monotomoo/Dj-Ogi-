@@ -6,7 +6,8 @@ import BioSection from './components/sections/BioSection'
 import LabelsSection from './components/sections/LabelsSection'
 import GallerySection from './components/sections/GallerySection'
 import HighlightsSection from './components/sections/HighlightsSection'
-// import VinylSection from './components/sections/VinylSection' // hidden until tracks selected
+import EnergeticaSection from './components/sections/EnergeticaSection'
+import VinylSection from './components/sections/VinylSection'
 import ContactSection from './components/sections/ContactSection'
 import FooterSection from './components/sections/FooterSection'
 import VHSOverlay from './components/vhs/VHSOverlay'
@@ -69,11 +70,12 @@ function App() {
         <PressMarquee />
         <ContactSection />
         <EventsSection />
-        {/* Hidden until tracks are selected: */}
+        {/* Mixer hidden until tracks are selected: */}
         {/* <MixerSection /> */}
-        {/* <VinylSection /> */}
+        <VinylSection />
         <GallerySection />
         <BioSection />
+        <EnergeticaSection />
         <HighlightsSection />
         <LabelsSection />
         <FooterSection />

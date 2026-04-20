@@ -3,11 +3,13 @@ import { useState, useEffect, useRef } from 'react'
 interface Vinyl {
   title: string; label: string; cat: string; year: string
   bpm: number; color: string; rgb: string; side: string
+  coverImage?: string
+  backCoverImage?: string
 }
 
 const VINYLS: Vinyl[] = [
   { title: 'RIJEKA ACID', label: 'TECHNODROME', cat: 'TDR-001', year: '1998', bpm: 145, color: '#00ffcc', rgb: '0,255,204', side: 'A' },
-  { title: 'HARD ATTACK', label: 'SUBMISSION', cat: 'SUB-022', year: '1998', bpm: 147, color: '#ffcc00', rgb: '255,204,0', side: 'A' },
+  { title: 'JOURNEY', label: 'SUBMISSIONS', cat: 'SUBMISSLP-001', year: '2003', bpm: 145, color: '#ffffff', rgb: '255,255,255', side: 'A', coverImage: '/vault/journey-front.jpg', backCoverImage: '/vault/journey-back.jpg' },
   { title: 'PATTERNS EP', label: 'PATTERNS', cat: 'PAT-033', year: '1999', bpm: 144, color: '#00aaff', rgb: '0,170,255', side: 'A' },
   { title: 'GROOVE DESTROYER', label: 'PLANET RHYTHM', cat: 'PR-044', year: '1999', bpm: 143, color: '#ff8800', rgb: '255,136,0', side: 'B' },
   { title: 'WAREHOUSE DISTRICT', label: 'TECHNODROME', cat: 'TDR-005', year: '1999', bpm: 142, color: '#00ffcc', rgb: '0,255,204', side: 'A' },
@@ -56,46 +58,99 @@ function getCoverStyle(v: Vinyl, i: number): React.CSSProperties {
   return styles[i % styles.length]
 }
 
-/* ── Generative cover art ── */
-function CoverArt({ vinyl, size = 'large', index = 0 }: { vinyl: Vinyl; size?: 'large' | 'thumb'; index?: number }) {
+/* ── Single face of the cover (front or back) ── */
+function CoverFace({ vinyl, image, size, index, isBack = false }:
+  { vinyl: Vinyl; image?: string; size: 'large' | 'thumb'; index: number; isBack?: boolean }) {
   const isLarge = size === 'large'
+  const hasRealCover = !!image
   return (
-    <div className="w-full h-full relative overflow-hidden select-none group/cover"
-      style={getCoverStyle(vinyl, index)}>
+    <div className="absolute inset-0 overflow-hidden"
+      style={{
+        ...(hasRealCover ? { background: '#000' } : getCoverStyle(vinyl, index)),
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        transform: isBack ? 'rotateY(180deg)' : 'rotateY(0deg)',
+      }}>
 
-      {/* Animated shimmer overlay */}
+      {hasRealCover && (
+        <img
+          src={image}
+          alt={`${vinyl.title} — ${vinyl.label}${isBack ? ' (back)' : ''}`}
+          className="absolute inset-0 w-full h-full object-cover cover-img-breathe"
+          style={{ filter: 'saturate(0.95) contrast(1.05)' }}
+        />
+      )}
+
+      {/* Shimmer sweep */}
       <div className="absolute inset-0 pointer-events-none cover-shimmer"
         style={{ background: `linear-gradient(110deg, transparent 30%, rgba(${vinyl.rgb},0.06) 50%, transparent 70%)`, backgroundSize: '200% 100%' }} />
 
-      {/* Label initial — huge, outlined */}
-      <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-        <span className="cover-letter" style={{
-          fontFamily: "'Orbitron', sans-serif",
-          fontSize: isLarge ? '14rem' : '3.5rem',
-          fontWeight: 900,
-          color: 'transparent',
-          WebkitTextStroke: isLarge ? `1.5px rgba(${vinyl.rgb},0.12)` : `1px rgba(${vinyl.rgb},0.15)`,
-          lineHeight: 1,
-          transition: 'all 0.5s ease',
-        }}>
-          {vinyl.label.split(' ').map(w => w[0]).join('')}
-        </span>
-      </div>
+      {/* Vertical tracking bar (slow sweep) — only on large */}
+      {isLarge && (
+        <div className="absolute left-0 right-0 h-6 pointer-events-none cover-tracking-bar"
+          style={{
+            background: `linear-gradient(180deg, transparent, rgba(${vinyl.rgb},0.12) 40%, rgba(255,255,255,0.05) 50%, rgba(${vinyl.rgb},0.12) 60%, transparent)`,
+            mixBlendMode: 'screen',
+          }} />
+      )}
 
-      {/* Colored accent edge — left + bottom */}
+      {/* Random glitch bar */}
+      {isLarge && (
+        <div className="absolute left-0 right-0 pointer-events-none cover-glitch-bar"
+          style={{
+            height: '3px',
+            top: '45%',
+            background: `linear-gradient(90deg, transparent, rgba(${vinyl.rgb},0.3), rgba(0,255,204,0.2), rgba(255,0,60,0.2), transparent)`,
+            mixBlendMode: 'screen',
+          }} />
+      )}
+
+      {/* Generative: huge label letter */}
+      {!hasRealCover && (
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+          <span className="cover-letter" style={{
+            fontFamily: "'Orbitron', sans-serif",
+            fontSize: isLarge ? '14rem' : '3.5rem',
+            fontWeight: 900,
+            color: 'transparent',
+            WebkitTextStroke: isLarge ? `1.5px rgba(${vinyl.rgb},0.12)` : `1px rgba(${vinyl.rgb},0.15)`,
+            lineHeight: 1,
+          }}>
+            {vinyl.label.split(' ').map(w => w[0]).join('')}
+          </span>
+        </div>
+      )}
+
+      {/* L-frame accents */}
       <div className="absolute bottom-0 left-0 right-0 h-[3px]"
         style={{ background: `linear-gradient(90deg, ${vinyl.color}, rgba(${vinyl.rgb},0.3))` }} />
       <div className="absolute top-0 left-0 bottom-0 w-[3px]"
         style={{ background: `linear-gradient(180deg, rgba(${vinyl.rgb},0.3), ${vinyl.color}, rgba(${vinyl.rgb},0.3))` }} />
 
-      {/* Top-right corner accent triangle */}
-      <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden opacity-60">
+      {/* Corner triangle */}
+      <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden opacity-60 pointer-events-none">
         <div className="absolute -top-8 -right-8 w-16 h-16 rotate-45"
           style={{ background: `rgba(${vinyl.rgb},0.15)` }} />
       </div>
 
-      {/* Title text — large covers */}
-      {isLarge && (
+      {/* VINYL badge (front only) */}
+      {hasRealCover && !isBack && (
+        <div className="absolute top-2 left-2 z-20 px-1.5 py-0.5 rounded"
+          style={{ background: `rgba(${vinyl.rgb},0.85)`, backdropFilter: 'blur(4px)' }}>
+          <span className="font-vhs text-[6px] tracking-widest text-black font-bold">VINYL</span>
+        </div>
+      )}
+
+      {/* B-SIDE badge on back */}
+      {hasRealCover && isBack && (
+        <div className="absolute top-2 left-2 z-20 px-1.5 py-0.5 rounded"
+          style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)' }}>
+          <span className="font-vhs text-[6px] tracking-widest text-black font-bold">TRACKLIST</span>
+        </div>
+      )}
+
+      {/* Generative title overlay */}
+      {isLarge && !hasRealCover && (
         <>
           <div className="absolute bottom-6 left-6 right-6 z-10">
             <div className="font-vhs text-2xl md:text-3xl text-white leading-tight tracking-wide mb-2"
@@ -110,26 +165,88 @@ function CoverArt({ vinyl, size = 'large', index = 0 }: { vinyl: Vinyl; size?: '
             <div className="font-vhs text-[10px] text-white/25 tracking-widest">{vinyl.cat}</div>
             <div className="font-vhs text-[9px] text-white/15 mt-1">{vinyl.year}</div>
           </div>
-          {/* Bottom gradient for text legibility */}
           <div className="absolute bottom-0 left-0 right-0 h-1/2 pointer-events-none"
             style={{ background: 'linear-gradient(transparent, rgba(0,0,0,0.7))' }} />
         </>
       )}
 
-      {/* Thumbnail: show mini title */}
-      {!isLarge && (
+      {!isLarge && !hasRealCover && (
         <div className="absolute bottom-1 left-1 right-1 z-10">
           <div className="font-vhs text-[5px] text-white/60 truncate leading-tight">{vinyl.title}</div>
         </div>
       )}
 
-      {/* VHS scan lines */}
-      <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.5) 2px, rgba(255,255,255,0.5) 3px)' }} />
+      {/* Hard scan lines (stronger on large) */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          opacity: isLarge ? 0.1 : 0.06,
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.5) 2px, rgba(255,255,255,0.5) 3px)',
+        }} />
 
-      {/* RGB chromatic edge on hover */}
-      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover/cover:opacity-100 transition-opacity duration-300"
-        style={{ boxShadow: `inset 2px 0 0 rgba(0,255,204,0.2), inset -2px 0 0 rgba(255,0,60,0.2)` }} />
+      {/* RGB chromatic edge bleed */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ boxShadow: 'inset 2px 0 0 rgba(0,255,204,0.15), inset -2px 0 0 rgba(255,0,60,0.15)' }} />
+
+      {/* Chromatic flash — rare */}
+      {isLarge && (
+        <div className="absolute inset-0 pointer-events-none cover-chroma-pulse"
+          style={{
+            background: `linear-gradient(90deg, rgba(0,255,204,0.08) 0%, transparent 50%, rgba(255,0,60,0.08) 100%)`,
+            mixBlendMode: 'screen',
+          }} />
+      )}
+
+      {/* Tape grain noise (subtle) */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5) 1px, transparent 1px), radial-gradient(circle at 70% 60%, rgba(255,255,255,0.5) 1px, transparent 1px)',
+          backgroundSize: '3px 3px, 5px 5px',
+        }} />
+
+      {/* Vignette */}
+      {isLarge && (
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%)' }} />
+      )}
+    </div>
+  )
+}
+
+/* ── Cover art with flip interaction ── */
+function CoverArt({ vinyl, size = 'large', index = 0 }: { vinyl: Vinyl; size?: 'large' | 'thumb'; index?: number }) {
+  const [flipped, setFlipped] = useState(false)
+  const hasBack = !!vinyl.backCoverImage
+  const isLarge = size === 'large'
+
+  return (
+    <div className="w-full h-full relative select-none group/cover"
+      style={{ perspective: '1600px' }}
+      onMouseEnter={() => hasBack && setFlipped(true)}
+      onMouseLeave={() => hasBack && setFlipped(false)}>
+
+      <div className="absolute inset-0 rounded-[inherit]"
+        style={{
+          transformStyle: 'preserve-3d',
+          transition: 'transform 0.9s cubic-bezier(0.4, 0, 0.2, 1)',
+          transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+        }}>
+        <CoverFace vinyl={vinyl} image={vinyl.coverImage} size={size} index={index} />
+        {hasBack && (
+          <CoverFace vinyl={vinyl} image={vinyl.backCoverImage} size={size} index={index} isBack />
+        )}
+      </div>
+
+      {/* "FLIP" hint badge — only when back exists and not flipped */}
+      {hasBack && isLarge && !flipped && (
+        <div className="absolute bottom-3 right-3 z-30 px-2 py-1 rounded pointer-events-none"
+          style={{
+            background: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(4px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+          }}>
+          <span className="font-vhs text-[8px] tracking-widest text-white/70">⟲ HOVER TO FLIP</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -438,6 +555,52 @@ export default function VinylSection() {
         @keyframes coverLetterFloat {
           0%, 100% { transform: scale(1) translateY(0); }
           50% { transform: scale(1.03) translateY(-2px); }
+        }
+
+        /* Vertical tracking bar — slow sweep with random glitch */
+        .cover-tracking-bar {
+          animation: coverTrackingBar 7s linear infinite;
+          top: -6%;
+        }
+        @keyframes coverTrackingBar {
+          0% { top: -6%; opacity: 0; }
+          5% { opacity: 0.8; }
+          50% { top: 50%; opacity: 0.6; }
+          95% { opacity: 0.5; }
+          100% { top: 106%; opacity: 0; }
+        }
+
+        /* Random glitch bar — jumps, shifts, disappears */
+        .cover-glitch-bar {
+          animation: coverGlitchBar 5s steps(1) infinite;
+        }
+        @keyframes coverGlitchBar {
+          0%, 100% { opacity: 0; transform: translateX(0); top: 30%; }
+          92% { opacity: 0; top: 30%; }
+          93% { opacity: 1; transform: translateX(-6px); top: 22%; }
+          94% { opacity: 0.6; transform: translateX(4px); top: 68%; }
+          95% { opacity: 1; transform: translateX(-2px); top: 45%; }
+          96% { opacity: 0.3; transform: translateX(3px); top: 80%; }
+          97% { opacity: 0; top: 30%; }
+        }
+
+        /* Chromatic edge pulse — breathes */
+        .cover-chroma-pulse {
+          animation: coverChromaPulse 3.5s ease-in-out infinite;
+          opacity: 0.35;
+        }
+        @keyframes coverChromaPulse {
+          0%, 100% { opacity: 0.25; }
+          50% { opacity: 0.55; }
+        }
+
+        /* Breathing image — slight zoom cycle */
+        .cover-img-breathe {
+          animation: coverImgBreathe 8s ease-in-out infinite;
+        }
+        @keyframes coverImgBreathe {
+          0%, 100% { transform: scale(1); filter: saturate(0.95) contrast(1.05); }
+          50% { transform: scale(1.02); filter: saturate(1.05) contrast(1.1); }
         }
       `}</style>
     </section>

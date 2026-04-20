@@ -6,14 +6,42 @@ const formInitial = { name: '', email: '', message: '' }
 export default function FooterSection() {
   const [formData, setFormData] = useState(formInitial)
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const subject = encodeURIComponent(`Booking Inquiry from ${formData.name}`)
-    const body = encodeURIComponent(`From: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`)
-    window.open(`mailto:${bookingEmail}?subject=${subject}&body=${body}`)
-    setSent(true)
-    setTimeout(() => { setSent(false); setFormData(formInitial) }, 3000)
+    setSending(true)
+    setError(null)
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: 'df78fb3b-31c8-4480-9bbe-c6886a8f4348',
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+          subject: `DJ Ogi Booking: ${formData.name}`,
+          from_name: 'DJ Ogi Website',
+          replyto: formData.email,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setSent(true)
+        setFormData(formInitial)
+        setTimeout(() => setSent(false), 5000)
+      } else {
+        setError(data.message || 'Failed to send — try emailing directly')
+        setTimeout(() => setError(null), 6000)
+      }
+    } catch {
+      setError('Network error — try again or email directly')
+      setTimeout(() => setError(null), 6000)
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -106,17 +134,22 @@ export default function FooterSection() {
                 />
                 <button
                   type="submit"
+                  disabled={sending}
                   className={`font-vhs text-xs tracking-[0.3em] px-6 py-4 rounded-lg w-full transition-all duration-300 ${
                     sent
                       ? 'bg-primary/25 text-primary border-2 border-primary/50 shadow-[0_0_25px_rgba(0,255,204,0.25)]'
+                      : sending
+                      ? 'bg-primary/5 text-primary/60 border-2 border-primary/20 cursor-wait'
                       : 'bg-primary/10 text-primary border-2 border-primary/30 hover:bg-primary/20 hover:border-primary/50 hover:shadow-[0_0_25px_rgba(0,255,204,0.2)]'
                   }`}
                 >
-                  {sent ? '// MESSAGE SENT — OPENING YOUR MAIL //' : 'SEND MESSAGE →'}
+                  {sent ? '// MESSAGE SENT //' : sending ? 'SENDING...' : 'SEND MESSAGE →'}
                 </button>
-                <div className="font-vhs text-[9px] text-white/25 tracking-widest text-center pt-1">
-                  OPENS YOUR EMAIL CLIENT
-                </div>
+                {error && (
+                  <p className="font-vhs text-[9px] text-accent/80 tracking-widest text-center pt-1">
+                    {error}
+                  </p>
+                )}
               </form>
             </div>
           </div>
