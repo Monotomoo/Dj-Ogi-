@@ -7,6 +7,7 @@ import LabelsSection from './components/sections/LabelsSection'
 import GallerySection from './components/sections/GallerySection'
 import HighlightsSection from './components/sections/HighlightsSection'
 import EnergeticaSection from './components/sections/EnergeticaSection'
+import TrackFeedSection from './components/sections/TrackFeedSection'
 import VinylSection from './components/sections/VinylSection'
 import ContactSection from './components/sections/ContactSection'
 import FooterSection from './components/sections/FooterSection'
@@ -68,6 +69,7 @@ function App() {
       <main>
         <HeroSection />
         <PressMarquee />
+        <TrackFeedSection />
         <ContactSection />
         <EventsSection />
         {/* Mixer hidden until tracks are selected: */}
