@@ -287,8 +287,9 @@ function VinylDisc({ vinyl, spinning }: { vinyl: Vinyl; spinning: boolean }) {
 export default function VinylSection() {
   const [activeIdx, setActiveIdx] = useState(0)
   const [spinning, setSpinning] = useState(false)
-  const [discOut, setDiscOut] = useState(true)
+  const [discOut, setDiscOut] = useState(false) // disc starts tucked inside sleeve
   const [inView, setInView] = useState(false)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const sectionRef = useRef<HTMLElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
   const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -303,34 +304,39 @@ export default function VinylSection() {
     return () => obs.disconnect()
   }, [])
 
-  // Auto-rotate
+  // Auto-rotate — only when NOT spinning (so user's listening is never interrupted)
   useEffect(() => {
-    if (!inView) return
-    const start = () => {
-      autoRef.current = setInterval(() => {
-        setActiveIdx(prev => (prev + 1) % VINYLS.length)
-      }, 4500) as unknown as ReturnType<typeof setTimeout>
-    }
-    start()
+    if (!inView || spinning) return
+    autoRef.current = setInterval(() => {
+      setActiveIdx(prev => (prev + 1) % VINYLS.length)
+    }, 5000) as unknown as ReturnType<typeof setTimeout>
     return () => { if (autoRef.current) clearInterval(autoRef.current) }
-  }, [inView])
+  }, [inView, spinning])
 
   const selectVinyl = (i: number) => {
     if (i === activeIdx) return
     if (autoRef.current) clearInterval(autoRef.current)
-    // Animate disc back in, switch, slide out
-    setDiscOut(false)
-    setTimeout(() => {
-      setActiveIdx(i)
+    // If disc is out, slide it back in before swapping sleeve
+    if (discOut || spinning) {
       setSpinning(false)
-      setTimeout(() => setDiscOut(true), 100)
-    }, 300)
-    // Restart auto after idle
-    autoRef.current = setTimeout(() => {
-      autoRef.current = setInterval(() => {
-        setActiveIdx(prev => (prev + 1) % VINYLS.length)
-      }, 4500) as unknown as ReturnType<typeof setTimeout>
-    }, 12000) as ReturnType<typeof setTimeout>
+      setDiscOut(false)
+      setTimeout(() => setActiveIdx(i), 500)
+    } else {
+      setActiveIdx(i)
+    }
+  }
+
+  // Play / pause toggle — slides disc out & spins, or tucks it back in
+  const togglePlay = () => {
+    if (spinning) {
+      // Pause → stop spin, slide disc back in
+      setSpinning(false)
+      setTimeout(() => setDiscOut(false), 150)
+    } else {
+      // Play → slide disc out, then start spinning once it's clear
+      setDiscOut(true)
+      setTimeout(() => setSpinning(true), 450)
+    }
   }
 
   // Scroll active thumbnail into view
@@ -345,7 +351,7 @@ export default function VinylSection() {
   }, [activeIdx])
 
   return (
-    <section ref={sectionRef} className="relative pt-24 pb-12 overflow-hidden"
+    <section id="vault" ref={sectionRef} className="relative pt-24 pb-12 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #050508 30%, #08080e 50%, #050508 70%, #000 100%)' }}>
 
       {/* Ambient spotlight */}
@@ -376,36 +382,50 @@ export default function VinylSection() {
 
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-0 justify-center">
 
-            {/* Cover + Disc ensemble */}
+            {/* Cover + Disc ensemble — disc always BEHIND the sleeve, slides out to the right on PLAY */}
             <div className="relative" style={{ width: 'min(380px, 85vw)', height: 'min(380px, 85vw)' }}>
 
-              {/* The sleeve / cover art */}
-              <div className="absolute inset-0 rounded-lg overflow-hidden z-10 transition-all duration-500"
+              {/* Shadow beneath disc (z-[3] — under everything) */}
+              <div className="absolute bottom-[-10px] left-[38%] w-[58%] h-4 rounded-full z-[3] transition-all duration-700 pointer-events-none"
                 style={{
-                  boxShadow: `0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(${active.rgb},0.06)`,
-                  border: `1px solid rgba(${active.rgb},0.1)`,
-                }}>
-                <CoverArt vinyl={active} size="large" index={activeIdx} />
-              </div>
+                  background: 'radial-gradient(ellipse, rgba(0,0,0,0.55), transparent)',
+                  opacity: discOut ? 1 : 0,
+                  filter: 'blur(10px)',
+                }} />
 
-              {/* The vinyl disc — slides out to the right */}
-              <div className="absolute top-0 bottom-0 z-[5] transition-all duration-700 ease-out"
+              {/* The vinyl disc — ALWAYS z-[5], lives behind the sleeve.
+                  When tucked: fully hidden under the sleeve.
+                  When out: right half peeks out past the sleeve's right edge (like a real record jacket). */}
+              <div className="absolute top-0 bottom-0 z-[5] ease-out"
                 style={{
                   width: 'min(340px, 80vw)',
-                  left: discOut ? '55%' : '10%',
+                  left: discOut ? '55%' : '4%',
                   opacity: discOut ? 1 : 0,
+                  transition: 'left 700ms cubic-bezier(0.22, 1, 0.36, 1), opacity 500ms ease',
+                  filter: discOut ? `drop-shadow(0 12px 24px rgba(0,0,0,0.7))` : 'none',
                 }}>
                 <div className="w-full h-full p-4">
                   <VinylDisc vinyl={active} spinning={spinning} />
                 </div>
               </div>
 
-              {/* Shadow beneath disc */}
-              <div className="absolute bottom-[-10px] left-[40%] w-[50%] h-4 rounded-full z-[4] transition-all duration-700"
+              {/* The sleeve / cover art — z-10, always in front of the disc */}
+              <div className="absolute inset-0 rounded-lg overflow-hidden z-10 transition-all duration-500"
                 style={{
-                  background: 'radial-gradient(ellipse, rgba(0,0,0,0.5), transparent)',
-                  opacity: discOut ? 1 : 0,
-                  filter: 'blur(8px)',
+                  boxShadow: spinning
+                    ? `0 20px 60px rgba(0,0,0,0.85), 0 0 60px rgba(${active.rgb},0.18), 0 0 100px rgba(${active.rgb},0.08)`
+                    : `0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(${active.rgb},0.06)`,
+                  border: `1px solid rgba(${active.rgb},${spinning ? '0.25' : '0.1'})`,
+                }}>
+                <CoverArt vinyl={active} size="large" index={activeIdx} />
+              </div>
+
+              {/* Sleeve opening shadow on the right edge — subtle dark gradient that sells the "record coming out of the jacket" illusion */}
+              <div className="absolute top-0 bottom-0 right-0 w-6 rounded-r-lg z-20 pointer-events-none transition-opacity duration-500"
+                style={{
+                  opacity: discOut ? 0.9 : 0,
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.7) 100%)',
+                  boxShadow: 'inset -1px 0 0 rgba(0,0,0,0.4)',
                 }} />
             </div>
 
@@ -439,32 +459,112 @@ export default function VinylSection() {
                 <span className="font-vhs text-xs text-white/20 ml-2 tracking-widest">BPM</span>
               </div>
 
-              {/* Play / Spin toggle */}
-              <button onClick={() => setSpinning(!spinning)}
-                className="group flex items-center gap-3 mx-auto md:mx-0 transition-all duration-300"
-                style={{
-                  padding: '10px 24px',
-                  borderRadius: '99px',
-                  background: spinning ? `rgba(${active.rgb},0.1)` : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${spinning ? `rgba(${active.rgb},0.3)` : 'rgba(255,255,255,0.08)'}`,
-                  boxShadow: spinning ? `0 0 20px rgba(${active.rgb},0.15)` : 'none',
-                }}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300"
+              {/* BIG Play / Spin button — pulsing rings, chromatic hover, signature glow */}
+              <button onClick={togglePlay}
+                onMouseEnter={() => setHoveredIdx(-1)}
+                onMouseLeave={() => setHoveredIdx(null)}
+                className="group relative flex items-center gap-5 mx-auto md:mx-0 select-none"
+                style={{ padding: '6px 6px 6px 6px', background: 'transparent', border: 'none' }}>
+
+                {/* Outer pulsing ring — only when spinning */}
+                {spinning && (
+                  <>
+                    <span aria-hidden className="absolute rounded-full pointer-events-none spin-ring-1"
+                      style={{
+                        left: 0, top: '50%', transform: 'translateY(-50%)',
+                        width: 88, height: 88,
+                        border: `2px solid rgba(${active.rgb},0.55)`,
+                      }} />
+                    <span aria-hidden className="absolute rounded-full pointer-events-none spin-ring-2"
+                      style={{
+                        left: 0, top: '50%', transform: 'translateY(-50%)',
+                        width: 88, height: 88,
+                        border: `1px solid rgba(${active.rgb},0.35)`,
+                      }} />
+                  </>
+                )}
+
+                {/* Main circular button — 88px */}
+                <span className="relative flex items-center justify-center rounded-full transition-all duration-300"
                   style={{
-                    background: spinning ? `rgba(${active.rgb},0.2)` : 'rgba(255,255,255,0.05)',
-                    color: spinning ? active.color : 'rgba(255,255,255,0.4)',
+                    width: 88, height: 88,
+                    background: spinning
+                      ? `radial-gradient(circle at 35% 30%, rgba(${active.rgb},0.35), rgba(${active.rgb},0.15) 60%, rgba(0,0,0,0.6))`
+                      : `radial-gradient(circle at 35% 30%, rgba(${active.rgb},0.22), rgba(0,0,0,0.8))`,
+                    border: `2px solid ${spinning ? active.color : `rgba(${active.rgb},0.45)`}`,
+                    boxShadow: spinning
+                      ? `0 0 40px rgba(${active.rgb},0.55), 0 0 80px rgba(${active.rgb},0.2), inset 0 0 20px rgba(${active.rgb},0.25)`
+                      : `0 0 20px rgba(${active.rgb},0.25), inset 0 0 15px rgba(0,0,0,0.6)`,
                   }}>
-                  {spinning ? (
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="5" y="4" width="4" height="16" rx="1.5" /><rect x="15" y="4" width="4" height="16" rx="1.5" /></svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
-                  )}
-                </div>
-                <span className="font-vhs text-[10px] tracking-widest transition-colors duration-300"
-                  style={{ color: spinning ? active.color : 'rgba(255,255,255,0.3)' }}>
-                  {spinning ? 'SPINNING' : 'SPIN IT'}
+                  {/* RGB chromatic ghost icons on hover */}
+                  <span aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300"
+                    style={{
+                      opacity: hoveredIdx === -1 ? 1 : 0,
+                      transform: 'translate(-3px, 0)',
+                      color: 'rgba(255,0,60,0.55)',
+                      mixBlendMode: 'screen',
+                    }}>
+                    {spinning ? (
+                      <svg className="w-9 h-9" fill="currentColor" viewBox="0 0 24 24"><rect x="5" y="4" width="4" height="16" rx="1" /><rect x="15" y="4" width="4" height="16" rx="1" /></svg>
+                    ) : (
+                      <svg className="w-10 h-10 ml-1" fill="currentColor" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
+                    )}
+                  </span>
+                  <span aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300"
+                    style={{
+                      opacity: hoveredIdx === -1 ? 1 : 0,
+                      transform: 'translate(3px, 0)',
+                      color: 'rgba(0,255,204,0.55)',
+                      mixBlendMode: 'screen',
+                    }}>
+                    {spinning ? (
+                      <svg className="w-9 h-9" fill="currentColor" viewBox="0 0 24 24"><rect x="5" y="4" width="4" height="16" rx="1" /><rect x="15" y="4" width="4" height="16" rx="1" /></svg>
+                    ) : (
+                      <svg className="w-10 h-10 ml-1" fill="currentColor" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
+                    )}
+                  </span>
+
+                  {/* Real icon */}
+                  <span className="relative transition-transform duration-300"
+                    style={{
+                      color: '#fff',
+                      filter: `drop-shadow(0 0 6px ${active.color})`,
+                      transform: hoveredIdx === -1 ? 'scale(1.08)' : 'scale(1)',
+                    }}>
+                    {spinning ? (
+                      <svg className="w-9 h-9" fill="currentColor" viewBox="0 0 24 24"><rect x="5" y="4" width="4" height="16" rx="1" /><rect x="15" y="4" width="4" height="16" rx="1" /></svg>
+                    ) : (
+                      <svg className="w-10 h-10 ml-1" fill="currentColor" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
+                    )}
+                  </span>
+
+                  {/* Scan lines inside button */}
+                  <span aria-hidden className="absolute inset-0 rounded-full pointer-events-none opacity-25"
+                    style={{
+                      backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.12) 2px, rgba(255,255,255,0.12) 3px)',
+                    }} />
                 </span>
-                {spinning && <div className="w-1.5 h-1.5 rounded-full bg-accent rec-dot shadow-[0_0_4px_#ff003c]" />}
+
+                {/* Label */}
+                <span className="flex flex-col items-start">
+                  <span className="font-vhs text-[9px] text-white/30 tracking-[0.4em] mb-1">
+                    {spinning ? '// NOW PLAYING' : '// PRESS PLAY'}
+                  </span>
+                  <span className="font-vhs text-xl tracking-[0.25em] transition-all duration-300"
+                    style={{
+                      color: spinning ? active.color : '#fff',
+                      textShadow: spinning ? `0 0 20px rgba(${active.rgb},0.7)` : 'none',
+                      letterSpacing: spinning ? '0.35em' : '0.25em',
+                    }}>
+                    {spinning ? 'SPINNING' : 'SPIN IT'}
+                  </span>
+                  {spinning && (
+                    <span className="flex items-center gap-1.5 mt-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent rec-dot shadow-[0_0_6px_#ff003c]" />
+                      <span className="font-vhs text-[8px] text-accent/70 tracking-widest">REC</span>
+                    </span>
+                  )}
+                </span>
               </button>
 
               {/* Nav */}
@@ -498,24 +598,72 @@ export default function VinylSection() {
               style={{ scrollbarWidth: 'none' }}>
               {VINYLS.map((v, i) => {
                 const isActive = i === activeIdx
+                const isHovered = hoveredIdx === i
+                const size = isHovered ? 120 : isActive ? 96 : 72
+                const lift = isHovered ? -14 : isActive ? -6 : 0
                 return (
                   <button key={v.cat} onClick={() => selectVinyl(i)}
-                    className="shrink-0 rounded-md overflow-hidden transition-all duration-400 relative group"
+                    onMouseEnter={() => setHoveredIdx(i)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                    className="shrink-0 rounded-md overflow-hidden relative group"
                     style={{
-                      width: isActive ? '90px' : '72px',
-                      height: isActive ? '90px' : '72px',
-                      border: `1px solid ${isActive ? v.color + '50' : 'rgba(255,255,255,0.06)'}`,
-                      boxShadow: isActive ? `0 0 20px rgba(${v.rgb},0.2), 0 8px 20px rgba(0,0,0,0.5)` : '0 4px 12px rgba(0,0,0,0.3)',
-                      transform: isActive ? 'translateY(-6px)' : 'translateY(0)',
+                      width: size,
+                      height: size,
+                      border: `1px solid ${isHovered ? v.color : isActive ? v.color + '60' : 'rgba(255,255,255,0.06)'}`,
+                      boxShadow: isHovered
+                        ? `0 0 30px rgba(${v.rgb},0.5), 0 0 60px rgba(${v.rgb},0.2), 0 12px 30px rgba(0,0,0,0.7)`
+                        : isActive
+                          ? `0 0 20px rgba(${v.rgb},0.25), 0 8px 20px rgba(0,0,0,0.5)`
+                          : '0 4px 12px rgba(0,0,0,0.3)',
+                      transform: `translateY(${lift}px)`,
+                      transition: 'width 0.35s cubic-bezier(0.34,1.56,0.64,1), height 0.35s cubic-bezier(0.34,1.56,0.64,1), transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border 0.3s ease',
+                      zIndex: isHovered ? 20 : isActive ? 10 : 1,
                     }}>
                     <CoverArt vinyl={v} size="thumb" index={i} />
-                    {/* Hover glow */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      style={{ background: `rgba(${v.rgb},0.08)` }} />
+
+                    {/* Hover glow overlay */}
+                    <div className="absolute inset-0 transition-opacity duration-300 pointer-events-none"
+                      style={{
+                        opacity: isHovered ? 1 : 0,
+                        background: `radial-gradient(circle at 50% 40%, rgba(${v.rgb},0.15), transparent 70%)`,
+                      }} />
+
+                    {/* Hover: title + label overlay */}
+                    <div className="absolute inset-x-0 bottom-0 p-1.5 pointer-events-none transition-all duration-300"
+                      style={{
+                        opacity: isHovered ? 1 : 0,
+                        transform: isHovered ? 'translateY(0)' : 'translateY(8px)',
+                        background: 'linear-gradient(transparent, rgba(0,0,0,0.9))',
+                      }}>
+                      <div className="font-vhs text-[8px] text-white truncate leading-tight tracking-wider"
+                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>
+                        {v.title}
+                      </div>
+                      <div className="font-vhs text-[6px] truncate tracking-widest mt-0.5"
+                        style={{ color: `rgba(${v.rgb},0.85)` }}>
+                        {v.label}
+                      </div>
+                    </div>
+
+                    {/* Hover: play icon peeking from top-right */}
+                    {isHovered && !isActive && (
+                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center pointer-events-none"
+                        style={{ background: 'rgba(0,0,0,0.7)', border: `1px solid ${v.color}`, boxShadow: `0 0 8px rgba(${v.rgb},0.6)` }}>
+                        <svg className="w-2.5 h-2.5 ml-0.5" fill={v.color} viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
+                      </div>
+                    )}
+
+                    {/* Hover: scan lines overlay */}
+                    <div className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+                      style={{
+                        opacity: isHovered ? 0.3 : 0,
+                        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.25) 2px, rgba(255,255,255,0.25) 3px)',
+                      }} />
+
                     {/* Active indicator dot */}
                     {isActive && (
                       <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                        style={{ background: v.color, boxShadow: `0 0 4px ${v.color}` }} />
+                        style={{ background: v.color, boxShadow: `0 0 6px ${v.color}` }} />
                     )}
                   </button>
                 )
@@ -601,6 +749,19 @@ export default function VinylSection() {
         @keyframes coverImgBreathe {
           0%, 100% { transform: scale(1); filter: saturate(0.95) contrast(1.05); }
           50% { transform: scale(1.02); filter: saturate(1.05) contrast(1.1); }
+        }
+
+        /* Play button pulsing rings */
+        .spin-ring-1 {
+          animation: spinRingPulse 1.8s ease-out infinite;
+        }
+        .spin-ring-2 {
+          animation: spinRingPulse 1.8s ease-out infinite;
+          animation-delay: 0.9s;
+        }
+        @keyframes spinRingPulse {
+          0%   { transform: translateY(-50%) scale(1);   opacity: 0.9; }
+          100% { transform: translateY(-50%) scale(1.7); opacity: 0; }
         }
       `}</style>
     </section>

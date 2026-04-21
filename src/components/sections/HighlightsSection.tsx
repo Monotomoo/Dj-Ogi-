@@ -2,7 +2,7 @@ import { pastHighlights } from '../../data/events'
 
 export default function HighlightsSection() {
   return (
-    <section className="relative py-24 overflow-hidden"
+    <section id="highlights" className="relative py-24 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #04040a 40%, #060610 60%, #000 100%)' }}>
 
       <div className="absolute inset-0 pointer-events-none">

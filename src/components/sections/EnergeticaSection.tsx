@@ -29,7 +29,7 @@ export default function EnergeticaSection() {
   }, [inView])
 
   return (
-    <section ref={sectionRef} className="relative py-24 overflow-hidden"
+    <section id="energetica" ref={sectionRef} className="relative py-24 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #060610 25%, #0a0a18 50%, #060610 75%, #000 100%)' }}>
 
       {/* Ambient — dual color */}

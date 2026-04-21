@@ -46,6 +46,7 @@ export default function FooterSection() {
 
   return (
     <footer
+      id="book"
       style={{
         background: 'linear-gradient(180deg, #000 0%, #05050a 50%, #07070e 100%)',
         borderTop: '1px solid rgba(0,255,204,0.08)',

@@ -88,7 +88,7 @@ export default function LabelsSection() {
   const otherLabels = labelLinks.filter(l => l.name !== 'Technodrome')
 
   return (
-    <section className="relative py-24 overflow-hidden"
+    <section id="labels" className="relative py-24 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #050508 30%, #080810 50%, #050508 70%, #000 100%)' }}>
 
       {/* Ambient orbs */}

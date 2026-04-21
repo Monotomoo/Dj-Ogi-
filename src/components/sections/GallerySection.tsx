@@ -78,7 +78,7 @@ export default function GallerySection() {
   }, [inView])
 
   return (
-    <section ref={sectionRef} className="relative pt-12 pb-12 overflow-hidden"
+    <section id="gallery" ref={sectionRef} className="relative pt-12 pb-12 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #050508 30%, #06060c 50%, #050508 70%, #000 100%)' }}>
 
       {/* Ambient */}

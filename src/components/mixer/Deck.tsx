@@ -28,6 +28,9 @@ export default function Deck({ deckId }: DeckProps) {
   useEffect(() => { audioManager.setEQ(deckId, 'hi', deck.eqHi) }, [deckId, deck.eqHi])
   useEffect(() => { audioManager.setFilter(deckId, deck.filter) }, [deckId, deck.filter])
   useEffect(() => { audioManager.setPitch(deckId, deck.pitch) }, [deckId, deck.pitch])
+  useEffect(() => { audioManager.setGain(deckId, deck.gain) }, [deckId, deck.gain])
+  useEffect(() => { audioManager.setReverbSend(deckId, deck.reverbSend) }, [deckId, deck.reverbSend])
+  useEffect(() => { audioManager.setKeyLock(deckId, deck.keyLock) }, [deckId, deck.keyLock])
 
   // ─── Handlers ───
   const handlePlay = useCallback(() => audioManager.toggle(deckId), [deckId])
@@ -103,6 +106,16 @@ export default function Deck({ deckId }: DeckProps) {
 
   const handlePitchChange = (v: number) => updateDeck({ pitch: v })
 
+  // ── Reverse hold: press = scrub back, release = resume ──
+  const handleReverseDown = () => {
+    audioManager.startReverse(deckId)
+    updateDeck({ reversing: true })
+  }
+  const handleReverseUp = () => {
+    audioManager.stopReverse(deckId)
+    updateDeck({ reversing: false })
+  }
+
   const formatTime = (ms: number) => {
     const secs = Math.floor(ms / 1000)
     return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`
@@ -159,12 +172,27 @@ export default function Deck({ deckId }: DeckProps) {
         <VUMeter isPlaying={deck.isPlaying} volume={deck.volume} color={color} />
       </div>
 
-      {/* ── KNOBS ROW: EQ + Filter + Pitch ── */}
+      {/* ── KNOBS ROW: Gain + EQ + Filter + Reverb + Hot Buttons + Pitch ── */}
       <div className="flex items-start justify-between gap-3 rounded-xl px-3 py-3"
         style={{
           background: 'rgba(0,0,0,0.3)',
           border: '1px solid rgba(255,255,255,0.04)',
         }}>
+
+        {/* GAIN trim — the first thing every pro touches when loading a track */}
+        <div className="flex items-start">
+          <Knob
+            label="GAIN"
+            value={deck.gain}
+            onChange={(v) => updateDeck({ gain: v })}
+            color={color}
+            size={42}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="w-px self-stretch bg-white/[0.06]" />
+
         {/* EQ 3-band */}
         <div className="flex items-start gap-3">
           <Knob label="HI" value={deck.eqHi} onChange={(v) => updateDeck({ eqHi: v })} color={color} size={42} />
@@ -178,6 +206,84 @@ export default function Deck({ deckId }: DeckProps) {
         {/* FILTER — bigger knob, the showpiece */}
         <div className="flex items-center">
           <Knob label="FILTER" value={deck.filter} onChange={(v) => updateDeck({ filter: v })} color={color} size={50} />
+        </div>
+
+        {/* Divider */}
+        <div className="w-px self-stretch bg-white/[0.06]" />
+
+        {/* REVERB — unipolar send knob (0..1). Map to knob -1..+1 for rotation. */}
+        <div className="flex items-start">
+          <Knob
+            label="REVERB"
+            value={deck.reverbSend * 2 - 1}
+            onChange={(v) => updateDeck({ reverbSend: Math.max(0, (v + 1) / 2) })}
+            color={color}
+            size={42}
+            defaultValue={-1}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="w-px self-stretch bg-white/[0.06]" />
+
+        {/* HOT BUTTONS: KEY LOCK toggle + REVERSE hold */}
+        <div className="flex flex-col gap-1.5 self-stretch pt-1.5">
+          {/* KEY LOCK — toggle, prevents pitch change when tempo moves */}
+          <button
+            onClick={() => updateDeck({ keyLock: !deck.keyLock })}
+            className="font-vhs text-[8px] tracking-[0.2em] px-2 py-1.5 rounded transition-all duration-200 select-none relative"
+            style={{
+              background: deck.keyLock ? `rgba(${colorRgb},0.18)` : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${deck.keyLock ? color + '80' : 'rgba(255,255,255,0.07)'}`,
+              color: deck.keyLock ? color : 'rgba(255,255,255,0.4)',
+              boxShadow: deck.keyLock ? `0 0 10px rgba(${colorRgb},0.35)` : 'none',
+              minWidth: 62,
+            }}
+            title="Key lock: preserves pitch when tempo changes"
+          >
+            <span className="flex items-center justify-center gap-1">
+              {deck.keyLock ? (
+                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6z"/>
+                </svg>
+              ) : (
+                <svg className="w-2.5 h-2.5 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h2c0-1.66 1.34-3 3-3s3 1.34 3 3v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/>
+                </svg>
+              )}
+              <span>KEY</span>
+            </span>
+          </button>
+
+          {/* REVERSE — momentary hold button, scrubs backwards while pressed */}
+          <button
+            onPointerDown={handleReverseDown}
+            onPointerUp={handleReverseUp}
+            onPointerLeave={() => deck.reversing && handleReverseUp()}
+            onPointerCancel={handleReverseUp}
+            className="font-vhs text-[8px] tracking-[0.2em] px-2 py-1.5 rounded transition-all duration-150 select-none relative"
+            style={{
+              background: deck.reversing
+                ? 'rgba(255,0,60,0.3)'
+                : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${deck.reversing ? '#ff003c' : 'rgba(255,255,255,0.07)'}`,
+              color: deck.reversing ? '#fff' : 'rgba(255,255,255,0.4)',
+              boxShadow: deck.reversing
+                ? '0 0 14px rgba(255,0,60,0.55), inset 0 0 8px rgba(255,0,60,0.3)'
+                : 'none',
+              minWidth: 62,
+              textShadow: deck.reversing ? '0 0 8px #ff003c' : 'none',
+            }}
+            title="Hold to scrub backwards"
+          >
+            <span className="flex items-center justify-center gap-1">
+              <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                <polygon points="11,19 2,12 11,5" />
+                <polygon points="22,19 13,12 22,5" />
+              </svg>
+              <span>RVRS</span>
+            </span>
+          </button>
         </div>
 
         {/* Divider */}

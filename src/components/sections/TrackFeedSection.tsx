@@ -240,7 +240,7 @@ export default function TrackFeedSection() {
   const activeIndex = CATEGORIES.findIndex(c => c.id === activeTab)
 
   return (
-    <section ref={sectionRef} className="relative py-14 overflow-hidden"
+    <section id="tracks" ref={sectionRef} className="relative py-14 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #000 0%, #040408 50%, #000 100%)' }}>
 
       {/* Ambient color orb */}

@@ -32,6 +32,12 @@ export interface DeckState {
   fxFlanger: boolean
   fxBitcrush: boolean
   fxGate: boolean
+
+  // Batch 6 — Pro DJ tools
+  gain: number         // bipolar -1..+1 → ±12 dB trim
+  reverbSend: number   // 0..1 — wet amount to reverb bus
+  keyLock: boolean     // preserves pitch when tempo changes
+  reversing: boolean   // true while REVERSE button is held
 }
 
 const makeDefaultDeck = (): DeckState => ({
@@ -60,6 +66,10 @@ const makeDefaultDeck = (): DeckState => ({
   fxFlanger: false,
   fxBitcrush: false,
   fxGate: false,
+  gain: 0,
+  reverbSend: 0,
+  keyLock: false,
+  reversing: false,
 })
 
 interface AudioStore {

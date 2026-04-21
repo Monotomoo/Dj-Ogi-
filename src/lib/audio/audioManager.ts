@@ -29,6 +29,8 @@ export type FXName = 'echo' | 'flanger' | 'bitcrush' | 'gate'
 interface DeckController {
   audio: HTMLAudioElement | null
   source: MediaElementAudioSourceNode | null
+  // Input trim (pre-EQ)
+  gainTrim: GainNode | null
   // EQ chain
   eqLow: BiquadFilterNode | null
   eqMid: BiquadFilterNode | null
@@ -52,6 +54,9 @@ interface DeckController {
   // Bitcrusher
   bitcrushSend: GainNode | null
   bitcrushShaper: WaveShaperNode | null
+  // Reverb
+  reverbSend: GainNode | null
+  reverbConvolver: ConvolverNode | null
   // Output
   volumeGain: GainNode | null
   crossfadeGain: GainNode | null
@@ -72,6 +77,8 @@ interface DeckController {
   isScratching: boolean
   scratchReleaseRaf: number
   preScratchRate: number
+  // Reverse scrub
+  reverseRaf: number
 }
 
 type ProgressCallback = (data: { position: number; relativePosition: number }) => void
@@ -79,12 +86,13 @@ type StateCallback = (state: 'play' | 'pause' | 'finish' | 'ready' | 'loading' |
 type TrackCallback = (track: { title: string; artist: string; duration: number }) => void
 
 const makeDeck = (): DeckController => ({
-  audio: null, source: null,
+  audio: null, source: null, gainTrim: null,
   eqLow: null, eqMid: null, eqHi: null, filter: null,
   gateInsert: null, fxSendPoint: null, dryGain: null,
   echoSend: null, echoDelay: null, echoFeedback: null,
   flangerSend: null, flangerDelay: null, flangerLFO: null, flangerLFOGain: null,
   bitcrushSend: null, bitcrushShaper: null,
+  reverbSend: null, reverbConvolver: null,
   volumeGain: null, crossfadeGain: null,
   isPlaying: false, isReady: false, progressRaf: 0,
   loopInterval: 0, loopStartMs: null, loopEndMs: null,
@@ -92,6 +100,7 @@ const makeDeck = (): DeckController => ({
   fxActive: { echo: false, flanger: false, bitcrush: false, gate: false },
   gateSchedTimeout: 0,
   isScratching: false, scratchReleaseRaf: 0, preScratchRate: 1,
+  reverseRaf: 0,
 })
 
 // FX target levels when active
@@ -179,6 +188,13 @@ class AudioManager {
       return
     }
 
+    // ─── Input trim (GAIN knob) ───
+    deck.gainTrim = ctx.createGain()
+    deck.gainTrim.gain.value = 1
+
+    // Sync key-lock default (off) with the audio element so store matches reality
+    this.setKeyLock(deckId, false)
+
     // ─── EQ ───
     deck.eqLow = ctx.createBiquadFilter()
     deck.eqLow.type = 'lowshelf'; deck.eqLow.frequency.value = 100; deck.eqLow.gain.value = 0
@@ -234,6 +250,12 @@ class AudioManager {
     deck.bitcrushShaper.curve = buildBitcrushCurve(12) as any // 12 step levels = lo-fi but not too harsh
     deck.bitcrushShaper.oversample = '2x'
 
+    // ─── Reverb (convolver with synthesized impulse response) ───
+    deck.reverbSend = ctx.createGain()
+    deck.reverbSend.gain.value = 0
+    deck.reverbConvolver = ctx.createConvolver()
+    deck.reverbConvolver.buffer = buildReverbImpulse(ctx)
+
     // ─── Output gains ───
     deck.volumeGain = ctx.createGain()
     deck.volumeGain.gain.value = 0.8
@@ -241,7 +263,8 @@ class AudioManager {
     deck.crossfadeGain.gain.value = 0.7
 
     // ─── Connect graph ───
-    deck.source.connect(deck.eqLow)
+    deck.source.connect(deck.gainTrim)
+    deck.gainTrim.connect(deck.eqLow)
     deck.eqLow.connect(deck.eqMid)
     deck.eqMid.connect(deck.eqHi)
     deck.eqHi.connect(deck.filter)
@@ -265,6 +288,10 @@ class AudioManager {
     deck.fxSendPoint.connect(deck.bitcrushSend)
     deck.bitcrushSend.connect(deck.bitcrushShaper)
     deck.bitcrushShaper.connect(deck.volumeGain)
+
+    deck.fxSendPoint.connect(deck.reverbSend)
+    deck.reverbSend.connect(deck.reverbConvolver)
+    deck.reverbConvolver.connect(deck.volumeGain)
 
     deck.volumeGain.connect(deck.crossfadeGain)
     // Route through master bus (which forks to destination + analyser + optional recorder)
@@ -313,13 +340,15 @@ class AudioManager {
     this.stopBeatLoop(deckId)
     this.stopTapeStop(deckId)
     this.stopGateSchedule(deckId)
+    this.stopReverse(deckId)
     try { deck.flangerLFO?.stop() } catch { /* ignore */ }
     const nodes: (AudioNode | null)[] = [
-      deck.source, deck.eqLow, deck.eqMid, deck.eqHi, deck.filter,
+      deck.source, deck.gainTrim, deck.eqLow, deck.eqMid, deck.eqHi, deck.filter,
       deck.gateInsert, deck.fxSendPoint, deck.dryGain,
       deck.echoSend, deck.echoDelay, deck.echoFeedback,
       deck.flangerSend, deck.flangerDelay, deck.flangerLFO, deck.flangerLFOGain,
       deck.bitcrushSend, deck.bitcrushShaper,
+      deck.reverbSend, deck.reverbConvolver,
       deck.volumeGain, deck.crossfadeGain,
     ]
     nodes.forEach(n => { try { n?.disconnect() } catch { /* ignore */ } })
@@ -442,6 +471,74 @@ class AudioManager {
     if (!deck.audio) return
     const clamped = Math.max(-1, Math.min(1, value))
     deck.audio.playbackRate = 1 + clamped * 0.08
+  }
+
+  // ─── Batch 6: Pro DJ tools ───
+
+  /** Input trim / gain: bipolar -1..+1 mapped to ±12 dB */
+  setGain(deckId: DeckId, value: number) {
+    const deck = this.decks[deckId]
+    if (!deck.gainTrim || !this.ctx) return
+    const clamped = Math.max(-1, Math.min(1, value))
+    const db = clamped * 12
+    const linear = Math.pow(10, db / 20)
+    deck.gainTrim.gain.setTargetAtTime(linear, this.ctx.currentTime, 0.015)
+  }
+
+  /** Reverb send: 0 = dry, 1 = fully wet */
+  setReverbSend(deckId: DeckId, value: number) {
+    const deck = this.decks[deckId]
+    if (!deck.reverbSend || !this.ctx) return
+    const clamped = Math.max(0, Math.min(1, value))
+    deck.reverbSend.gain.setTargetAtTime(clamped, this.ctx.currentTime, 0.02)
+  }
+
+  /** Preserve pitch when changing playbackRate — pro DJ "key lock" */
+  setKeyLock(deckId: DeckId, locked: boolean) {
+    const deck = this.decks[deckId]
+    if (!deck.audio) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const a = deck.audio as any
+    if ('preservesPitch' in a) a.preservesPitch = locked
+    if ('mozPreservesPitch' in a) a.mozPreservesPitch = locked
+    if ('webkitPreservesPitch' in a) a.webkitPreservesPitch = locked
+  }
+
+  /** Reverse scrub — rapid backwards step while held */
+  startReverse(deckId: DeckId) {
+    const deck = this.decks[deckId]
+    if (!deck.audio || deck.reverseRaf) return
+    // Pause real playback; we drive position manually
+    const wasPlaying = !deck.audio.paused
+    if (wasPlaying) deck.audio.pause()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(deck as any).__reverseWasPlaying = wasPlaying
+    let lastTs = performance.now()
+    const step = (ts: number) => {
+      if (!deck.audio) return
+      const dt = (ts - lastTs) / 1000
+      lastTs = ts
+      // Scrub back at 2× speed (2 seconds of audio per real second)
+      deck.audio.currentTime = Math.max(0, deck.audio.currentTime - dt * 2)
+      deck.reverseRaf = requestAnimationFrame(step)
+    }
+    deck.reverseRaf = requestAnimationFrame(step)
+  }
+
+  stopReverse(deckId: DeckId) {
+    const deck = this.decks[deckId]
+    if (deck.reverseRaf) {
+      cancelAnimationFrame(deck.reverseRaf)
+      deck.reverseRaf = 0
+    }
+    if (!deck.audio) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wasPlaying = (deck as any).__reverseWasPlaying
+    if (wasPlaying) {
+      deck.audio.play().catch(() => { /* ignore */ })
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (deck as any).__reverseWasPlaying
   }
 
   // ─── Batch 3: Transport tools ───
@@ -1161,6 +1258,29 @@ function buildBitcrushCurve(steps: number): Float32Array {
     curve[i] = Math.round(x * steps) / steps
   }
   return curve
+}
+
+/**
+ * Synthesize a stereo impulse response for the reverb convolver.
+ * Exponentially decaying noise — roughly a medium-sized warehouse (~2.2s decay).
+ * Cheaper than loading an IR file and sounds great for techno washouts.
+ */
+function buildReverbImpulse(ctx: AudioContext): AudioBuffer {
+  const sampleRate = ctx.sampleRate
+  const durationSec = 2.2
+  const length = Math.floor(sampleRate * durationSec)
+  const buffer = ctx.createBuffer(2, length, sampleRate)
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buffer.getChannelData(ch)
+    for (let i = 0; i < length; i++) {
+      const t = i / length
+      // Noise with sharp attack, exponential tail. Slight stereo variation.
+      const decay = Math.pow(1 - t, 2.8)
+      const variation = ch === 0 ? 1 : 0.92
+      data[i] = (Math.random() * 2 - 1) * decay * variation
+    }
+  }
+  return buffer
 }
 
 export const audioManager = new AudioManager()
