@@ -14,9 +14,27 @@ export interface DeckState {
   isReady: boolean
   isLoading: boolean
   hasError: boolean
+
+  // Batch 2 — Core sound shaping (all bipolar -1 to 1, 0 = neutral)
+  eqHi: number
+  eqMid: number
+  eqLow: number
+  filter: number    // bipolar: -1 low-pass, 0 bypass, +1 high-pass
+  pitch: number     // bipolar: -1 = -8%, 0 = 0, +1 = +8%
+
+  // Batch 3 — Transport tools
+  hotCues: (number | null)[] // 4 slots, ms positions (null = unset)
+  loopActive: boolean
+  loopBars: number | null    // null = no loop, otherwise 0.5/1/2/4
+
+  // Batch 4 — FX pads
+  fxEcho: boolean
+  fxFlanger: boolean
+  fxBitcrush: boolean
+  fxGate: boolean
 }
 
-const defaultDeck: DeckState = {
+const makeDefaultDeck = (): DeckState => ({
   trackUrl: '',
   trackTitle: '',
   trackArtist: '',
@@ -30,17 +48,29 @@ const defaultDeck: DeckState = {
   isReady: false,
   isLoading: false,
   hasError: false,
-}
+  eqHi: 0,
+  eqMid: 0,
+  eqLow: 0,
+  filter: 0,
+  pitch: 0,
+  hotCues: [null, null, null, null],
+  loopActive: false,
+  loopBars: null,
+  fxEcho: false,
+  fxFlanger: false,
+  fxBitcrush: false,
+  fxGate: false,
+})
 
 interface AudioStore {
   deckA: DeckState
   deckB: DeckState
   crossfader: number // 0 = full A, 0.5 = center, 1 = full B
-  filterA: number // 0-1, 0.5 = neutral
-  filterB: number // 0-1, 0.5 = neutral
+  filterA: number // legacy; kept so old FilterKnob compiles. Not wired anywhere.
+  filterB: number
   isAnyPlaying: boolean
-  energy: number // 0-1 simulated energy
-  beatPhase: number // 0-1 cycling with BPM
+  energy: number
+  beatPhase: number
 
   // Actions
   updateDeckA: (partial: Partial<DeckState>) => void
@@ -53,8 +83,8 @@ interface AudioStore {
 }
 
 export const useAudioStore = create<AudioStore>((set) => ({
-  deckA: { ...defaultDeck },
-  deckB: { ...defaultDeck },
+  deckA: makeDefaultDeck(),
+  deckB: makeDefaultDeck(),
   crossfader: 0.5,
   filterA: 0.5,
   filterB: 0.5,

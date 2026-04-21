@@ -1,7 +1,7 @@
-import { useRef, useEffect, useMemo } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import seedrandom from 'seedrandom'
 import { useAudioStore } from '../../stores/audioStore'
-import type { DeckId } from '../../lib/audio/soundcloudManager'
+import { audioManager, type DeckId } from '../../lib/audio/audioManager'
 
 interface WaveformDisplayProps {
   deckId: DeckId
@@ -12,13 +12,21 @@ const BAR_COUNT = 120
 
 export default function WaveformDisplay({ deckId, position }: WaveformDisplayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const trackUrl = useAudioStore((s) => deckId === 'A' ? s.deckA.trackUrl : s.deckB.trackUrl)
   const trackTitle = useAudioStore((s) => deckId === 'A' ? s.deckA.trackTitle : s.deckB.trackTitle)
   const isPlaying = useAudioStore((s) => deckId === 'A' ? s.deckA.isPlaying : s.deckB.isPlaying)
+  const isReady = useAudioStore((s) => deckId === 'A' ? s.deckA.isReady : s.deckB.isReady)
 
   const isA = deckId === 'A'
   const colorPlayed = isA ? [0, 255, 204] : [255, 0, 60]
 
-  const waveformData = useMemo(() => {
+  // Real PCM peaks (fetched after track loads) OR seeded fallback until ready
+  const [peaks, setPeaks] = useState<number[]>([])
+  const [usingRealPeaks, setUsingRealPeaks] = useState(false)
+
+  // Fallback seeded waveform for loading state / SC tracks
+  useEffect(() => {
+    if (peaks.length > 0) return // already have data
     const rng = seedrandom(trackTitle || `deck-${deckId}-default`)
     const data: number[] = []
     for (let i = 0; i < BAR_COUNT; i++) {
@@ -26,12 +34,32 @@ export default function WaveformDisplay({ deckId, position }: WaveformDisplayPro
       const noise = rng() * 0.7
       data.push(envelope + noise * (1 - envelope * 0.5))
     }
-    return data
-  }, [trackTitle, deckId])
+    setPeaks(data)
+  }, [trackTitle, deckId, peaks.length])
+
+  // Fetch real PCM peaks once the track is ready (self-hosted audio only — skip SC URLs)
+  useEffect(() => {
+    if (!isReady || !trackUrl) return
+    // Only decode local/R2 URLs, not SC page URLs (SC page URLs can't be fetched+decoded)
+    if (trackUrl.includes('soundcloud.com')) { setUsingRealPeaks(false); return }
+    let cancelled = false
+
+    audioManager.getWaveformPeaks(deckId, BAR_COUNT).then((realPeaks) => {
+      if (cancelled || !realPeaks) return
+      // Normalize to 0-1 range, boost lower values so visualization has presence
+      const max = Math.max(...realPeaks, 0.001)
+      const normalized = realPeaks.map(p => Math.min(1, (p / max) * 0.9 + 0.1))
+      setPeaks(normalized)
+      setUsingRealPeaks(true)
+    })
+
+    return () => { cancelled = true }
+    // isRemote is derived, we only care about trackUrl changes
+  }, [isReady, trackUrl, deckId])
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas || peaks.length === 0) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
@@ -49,20 +77,15 @@ export default function WaveformDisplay({ deckId, position }: WaveformDisplayPro
 
     ctx.clearRect(0, 0, w, h)
 
-    // Draw bars
     for (let i = 0; i < BAR_COUNT; i++) {
       const x = i * barWidth
-      const barH = waveformData[i] * h * 0.85
+      const barH = peaks[i] * h * 0.85
       const y = (h - barH) / 2
       const isPast = x < playheadX
-      const progress = x / w
 
       if (isPast) {
-        // Gradient from bright to slightly dimmer as it recedes
         const brightness = 0.5 + 0.5 * (x / playheadX)
         ctx.fillStyle = `rgba(${r},${g},${b},${brightness})`
-
-        // Add glow on playing bars near playhead
         if (isPlaying && x > playheadX - 30) {
           ctx.shadowColor = `rgba(${r},${g},${b},0.8)`
           ctx.shadowBlur = 8
@@ -70,21 +93,15 @@ export default function WaveformDisplay({ deckId, position }: WaveformDisplayPro
           ctx.shadowBlur = 0
         }
       } else {
-        // Future bars — dim, slight color tint in back half
-        const tint = progress > 0.5 ? 0.06 : 0.03
-        ctx.fillStyle = `rgba(${r},${g},${b},${tint})`
         ctx.shadowBlur = 0
-        // Overlay white
-        ctx.fillStyle = `rgba(255,255,255,${0.07 + waveformData[i] * 0.05})`
+        ctx.fillStyle = `rgba(255,255,255,${0.07 + peaks[i] * 0.05})`
       }
 
       ctx.fillRect(x + 0.5, y, Math.max(barWidth - 1.5, 1), barH)
       ctx.shadowBlur = 0
     }
 
-    // Playhead
     if (position > 0) {
-      // Glow
       ctx.shadowColor = `rgba(${r},${g},${b},1)`
       ctx.shadowBlur = 12
       ctx.strokeStyle = `rgba(${r},${g},${b},1)`
@@ -95,7 +112,6 @@ export default function WaveformDisplay({ deckId, position }: WaveformDisplayPro
       ctx.stroke()
       ctx.shadowBlur = 0
 
-      // White highlight on playhead
       ctx.strokeStyle = 'rgba(255,255,255,0.9)'
       ctx.lineWidth = 0.5
       ctx.beginPath()
@@ -104,21 +120,20 @@ export default function WaveformDisplay({ deckId, position }: WaveformDisplayPro
       ctx.stroke()
     }
 
-    // Center line (axis)
     ctx.strokeStyle = 'rgba(255,255,255,0.04)'
     ctx.lineWidth = 0.5
     ctx.beginPath()
     ctx.moveTo(0, h / 2)
     ctx.lineTo(w, h / 2)
     ctx.stroke()
-
-  }, [position, waveformData, deckId, isPlaying, colorPlayed])
+  }, [position, peaks, isPlaying, colorPlayed])
 
   return (
     <canvas
       ref={canvasRef}
       className="w-full h-16 rounded-xl"
       style={{ background: 'rgba(0,0,0,0.5)' }}
+      data-real-peaks={usingRealPeaks ? 'true' : 'false'}
     />
   )
 }

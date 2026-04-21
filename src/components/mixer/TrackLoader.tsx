@@ -1,5 +1,5 @@
 import { essentialTracks } from '../../data/tracks'
-import type { DeckId } from '../../lib/audio/soundcloudManager'
+import type { DeckId } from '../../lib/audio/audioManager'
 
 interface TrackLoaderProps {
   deckId: DeckId

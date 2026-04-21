@@ -206,6 +206,71 @@ body {
   100% { opacity: 0; }
 }
 
+/* ========= REC BLINK ========= */
+@keyframes recBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ========= FLOOR DESTROYED ========= */
+@keyframes floorDestroyedStrobe {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0; }
+}
+@keyframes floorDestroyedShake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-4px, 2px); }
+  50% { transform: translate(4px, -2px); }
+  75% { transform: translate(-2px, 3px); }
+  100% { transform: translate(3px, -1px); }
+}
+
+/* ========= FX PAD PULSE ========= */
+.fx-pad-pulse {
+  animation: fxPadPulse 1.2s ease-in-out infinite;
+}
+@keyframes fxPadPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ========= PITCH SLIDER (vertical) ========= */
+.pitch-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.08) 0%,
+    rgba(255,255,255,0.08) 49%,
+    rgba(255,255,255,0.25) 49%,
+    rgba(255,255,255,0.25) 51%,
+    rgba(255,255,255,0.08) 51%,
+    rgba(255,255,255,0.08) 100%);
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.pitch-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 10px;
+  background: linear-gradient(180deg, #d0d0d2, #808082);
+  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.4);
+  cursor: grab;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.pitch-slider::-webkit-slider-thumb:active { cursor: grabbing; }
+.pitch-slider::-moz-range-thumb {
+  width: 14px;
+  height: 10px;
+  background: linear-gradient(180deg, #d0d0d2, #808082);
+  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.4);
+  cursor: grab;
+}
+
 /* ========= REDUCED MOTION ========= */
 @media (prefers-reduced-motion: reduce) {
   .vhs-overlay::after, .vhs-noise, .vhs-flicker { display: none !important; }

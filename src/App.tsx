@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import HeroSection from './components/sections/HeroSection'
 import EventsSection from './components/sections/EventsSection'
-// import MixerSection from './components/sections/MixerSection' // hidden until tracks selected
+import MixerSection from './components/sections/MixerSection'
 import BioSection from './components/sections/BioSection'
 import LabelsSection from './components/sections/LabelsSection'
 import GallerySection from './components/sections/GallerySection'
@@ -72,8 +72,7 @@ function App() {
         <TrackFeedSection />
         <ContactSection />
         <EventsSection />
-        {/* Mixer hidden until tracks are selected: */}
-        {/* <MixerSection /> */}
+        <MixerSection />
         <VinylSection />
         <GallerySection />
         <BioSection />

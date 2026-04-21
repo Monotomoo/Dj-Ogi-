@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Test audio — full mp3s not committed (use audioUrl pointing to R2 for production)
+public/audio/*.mp3
+public/audio/*.wav
+public/audio/*.m4a
+!public/audio/.gitkeep
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

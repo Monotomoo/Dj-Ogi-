@@ -7,29 +7,33 @@ export interface TrackData {
   year: number
   label: string
   soundcloudUrl: string
+  /** Self-hosted audio URL (local /audio/ path or future R2 URL). Takes priority over soundcloudUrl when set. */
+  audioUrl?: string
 }
 
 // 20 Verified DJ Ogi tracks from SoundCloud - all URLs confirmed working
 export const essentialTracks: TrackData[] = [
   {
     id: 1,
-    title: 'Robot',
-    artist: 'DJ Ogi',
-    bpm: 145,
+    title: 'I Want You (Original Mix)',
+    artist: 'Spencer & Hill ft. AFC Project',
+    bpm: 128,
     key: 'Am',
-    year: 2016,
-    label: 'Technodrome',
-    soundcloudUrl: 'https://soundcloud.com/dj-ogi/dj-ogi-robot-technodrome-048-free-download',
+    year: 2009,
+    label: 'Test',
+    soundcloudUrl: 'https://soundcloud.com/dj-ogi',
+    audioUrl: '/audio/Spencer & Hill - I Want You (Original Mix) Ft. Afc Project.mp3',
   },
   {
     id: 2,
-    title: 'Dark Star',
-    artist: 'DJ Ogi',
-    bpm: 142,
+    title: 'There Must Be An Angel (D And F Remix)',
+    artist: 'Stereo Touch',
+    bpm: 128,
     key: 'Cm',
-    year: 2015,
-    label: 'Technodrome',
-    soundcloudUrl: 'https://soundcloud.com/dj-ogi/dj-ogi-dark-star-technodrome',
+    year: 2009,
+    label: 'Test',
+    soundcloudUrl: 'https://soundcloud.com/dj-ogi',
+    audioUrl: '/audio/Stereo Touch - There Must Be An Angel (D And F Remix).mp3',
   },
   {
     id: 3,

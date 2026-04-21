@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import { useAudioStore } from '../../stores/audioStore'
-import type { DeckId } from '../../lib/audio/soundcloudManager'
+import type { DeckId } from '../../lib/audio/audioManager'
 
 interface FilterKnobProps {
   deckId: DeckId

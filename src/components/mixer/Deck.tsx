@@ -1,134 +1,212 @@
-import { useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useAudioStore } from '../../stores/audioStore'
-import { scManager, type DeckId } from '../../lib/audio/soundcloudManager'
+import { audioManager, type DeckId } from '../../lib/audio/audioManager'
 import { essentialTracks } from '../../data/tracks'
 import WaveformDisplay from './WaveformDisplay'
 import TrackLoader from './TrackLoader'
 import VUMeter from './VUMeter'
 import VinylRecord from './VinylRecord'
-
-const SC_PROFILE = 'https://soundcloud.com/dj-ogi'
+import Knob from './Knob'
+import FXPads from './FXPads'
 
 interface DeckProps { deckId: DeckId }
 
+const LOOP_SIZES = [0.5, 1, 2, 4] as const
+
 export default function Deck({ deckId }: DeckProps) {
   const deck = useAudioStore((s) => deckId === 'A' ? s.deckA : s.deckB)
+  const otherDeck = useAudioStore((s) => deckId === 'A' ? s.deckB : s.deckA)
   const updateDeck = useAudioStore((s) => deckId === 'A' ? s.updateDeckA : s.updateDeckB)
-  const [isLooping, setIsLooping] = useState(false)
 
   const isA = deckId === 'A'
   const color = isA ? '#00ffcc' : '#ff003c'
   const colorRgb = isA ? '0,255,204' : '255,0,60'
 
-  const handlePlay = () => scManager.toggle(deckId)
-  const handleCue = () => { scManager.seekTo(deckId, 0); updateDeck({ position: 0, positionMs: 0 }) }
+  // Push knob changes into the audio manager whenever store values change
+  useEffect(() => { audioManager.setEQ(deckId, 'low', deck.eqLow) }, [deckId, deck.eqLow])
+  useEffect(() => { audioManager.setEQ(deckId, 'mid', deck.eqMid) }, [deckId, deck.eqMid])
+  useEffect(() => { audioManager.setEQ(deckId, 'hi', deck.eqHi) }, [deckId, deck.eqHi])
+  useEffect(() => { audioManager.setFilter(deckId, deck.filter) }, [deckId, deck.filter])
+  useEffect(() => { audioManager.setPitch(deckId, deck.pitch) }, [deckId, deck.pitch])
+
+  // ─── Handlers ───
+  const handlePlay = useCallback(() => audioManager.toggle(deckId), [deckId])
+
+  const handleCue = useCallback(() => {
+    audioManager.seekTo(deckId, 0)
+    updateDeck({ position: 0, positionMs: 0 })
+  }, [deckId, updateDeck])
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    scManager.seekTo(deckId, ratio * deck.duration)
+    audioManager.seekTo(deckId, ratio * deck.duration)
     updateDeck({ position: ratio, positionMs: ratio * deck.duration })
   }
 
   const handleLoadTrack = (trackId: number) => {
     const track = essentialTracks.find((t) => t.id === trackId)
     if (!track) return
-    scManager.loadTrack(deckId, track.soundcloudUrl)
-    updateDeck({ bpm: track.bpm, trackUrl: track.soundcloudUrl, trackTitle: track.title, trackArtist: track.artist, isPlaying: false, position: 0, positionMs: 0 })
+    const url = track.audioUrl || track.soundcloudUrl
+    audioManager.loadTrack(deckId, url, { title: track.title, artist: track.artist })
+    // Reset deck state for new track
+    updateDeck({
+      bpm: track.bpm, trackUrl: url, trackTitle: track.title, trackArtist: track.artist,
+      isPlaying: false, position: 0, positionMs: 0,
+      hotCues: [null, null, null, null], loopActive: false, loopBars: null,
+    })
   }
+
+  const handleSync = () => {
+    if (!deck.bpm || !otherDeck.bpm) return
+    const ok = audioManager.syncTo(deckId, deck.bpm, otherDeck.bpm)
+    if (ok) {
+      // Pitch stored visually as the deviation from 1.0 (±8% = ±1 on the knob)
+      const ratio = otherDeck.bpm / deck.bpm
+      const pitchVisual = (ratio - 1) / 0.08
+      updateDeck({ pitch: Math.max(-1, Math.min(1, pitchVisual)) })
+    }
+  }
+
+  const handleHotCue = (slot: number) => {
+    const cues = [...deck.hotCues]
+    if (cues[slot] == null) {
+      // Unset slot → mark current position
+      cues[slot] = deck.positionMs
+      updateDeck({ hotCues: cues })
+    } else {
+      // Set slot → jump to it
+      audioManager.jumpToHotCue(deckId, cues[slot]!)
+    }
+  }
+
+  const handleClearHotCue = (slot: number) => {
+    const cues = [...deck.hotCues]
+    cues[slot] = null
+    updateDeck({ hotCues: cues })
+  }
+
+  const handleLoopToggle = (bars: number) => {
+    if (deck.loopActive && deck.loopBars === bars) {
+      // Same loop active → cancel
+      audioManager.stopBeatLoop(deckId)
+      updateDeck({ loopActive: false, loopBars: null })
+    } else {
+      audioManager.startBeatLoop(deckId, bars, deck.bpm)
+      updateDeck({ loopActive: true, loopBars: bars })
+    }
+  }
+
+  const handleTapeStop = () => {
+    audioManager.tapeStop(deckId, 1000)
+  }
+
+  const handlePitchChange = (v: number) => updateDeck({ pitch: v })
 
   const formatTime = (ms: number) => {
     const secs = Math.floor(ms / 1000)
     return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`
   }
 
-  // SoundCloud API blocked — show fallback
-  if (deck.hasError && !deck.isLoaded) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 gap-5 text-center px-4">
-        <div className="relative w-full py-6 rounded-xl overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.4))', border: '1px solid rgba(255,255,255,0.04)' }}>
-          <div className="font-vhs text-3xl text-white/[0.07] tracking-[0.3em]">NO SIGNAL</div>
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)' }} />
-        </div>
-        <div className="space-y-2 text-left w-full">
-          <div className="font-vhs text-[8px] text-white/15 tracking-[0.4em] text-center mb-3">// HOW TO FIX</div>
-          {['Click the shield icon in your browser address bar', 'Select "Turn off protection for this site"', 'Page reloads — mixer activates'].map((step, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <span className="font-vhs text-[9px] flex-shrink-0" style={{ color: `rgba(${colorRgb},0.5)` }}>{String(i + 1).padStart(2, '0')}</span>
-              <span className="font-vhs text-[9px] text-white/25 leading-relaxed">{step}</span>
-            </div>
-          ))}
-        </div>
-        <button onClick={() => scManager.retryInit(deckId)}
-          className="font-vhs text-[9px] text-white/30 tracking-widest hover:text-white/60 transition-colors underline underline-offset-4">
-          RETRY
-        </button>
-        <div className="font-vhs text-[8px] text-white/10 tracking-widest">— OR OPEN IN CHROME —</div>
-        <a href={SC_PROFILE} target="_blank" rel="noopener noreferrer"
-          className="font-vhs text-[9px] px-5 py-2 rounded-lg tracking-widest border transition-all"
-          style={{ color: `rgba(${colorRgb},0.6)`, borderColor: `rgba(${colorRgb},0.2)` }}>
-          LISTEN ON SOUNDCLOUD →
-        </a>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
 
       {/* Track loader */}
       <TrackLoader deckId={deckId} onSelect={handleLoadTrack} />
 
-      {/* ── MAIN AREA: Vinyl + Info ── */}
+      {/* ── MAIN AREA: Vinyl + Info + VU ── */}
       <div className="flex items-start gap-4">
-        {/* Vinyl */}
-        <VinylRecord isPlaying={deck.isPlaying} color={color} />
+        <VinylRecord isPlaying={deck.isPlaying} color={color} deckId={deckId} />
 
-        {/* Info column */}
         <div className="flex-1 min-w-0 space-y-2 pt-1">
-          {/* Track name */}
           <div>
             <div className="font-vhs text-[10px] tracking-[0.3em] mb-1"
               style={{ color: `rgba(${colorRgb},0.5)` }}>
-              {deck.isLoading ? '// LOADING...' : deck.hasError ? '// SC ERROR' : '// NOW LOADING'}
+              {deck.isLoading ? '// LOADING...' : deck.hasError ? '// LOAD ERROR' : deck.isPlaying ? '// PLAYING' : '// LOADED'}
             </div>
             <div className="font-vhs text-base text-white leading-tight truncate">
               {deck.trackTitle || 'NO TRACK LOADED'}
             </div>
-            <div className="font-vhs text-[9px] text-white/25 truncate mt-0.5">
-              {deck.trackArtist}
-            </div>
+            <div className="font-vhs text-[9px] text-white/25 truncate mt-0.5">{deck.trackArtist}</div>
           </div>
 
-          {/* BPM display — big and vivid */}
-          <div className="rounded-xl px-3 py-2.5 flex items-baseline gap-2"
-            style={{
-              background: `linear-gradient(135deg, rgba(${colorRgb},0.08) 0%, rgba(0,0,0,0.3) 100%)`,
-              border: `1px solid rgba(${colorRgb},0.12)`,
-            }}>
-            <span className="font-vhs text-4xl leading-none font-bold tabular-nums"
+          {/* BPM + time */}
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg px-2.5 py-1.5 flex items-baseline gap-1.5"
               style={{
-                color,
-                textShadow: deck.isPlaying ? `0 0 20px rgba(${colorRgb},0.8), 0 0 40px rgba(${colorRgb},0.4)` : 'none',
-                transition: 'text-shadow 0.5s ease',
+                background: `linear-gradient(135deg, rgba(${colorRgb},0.08) 0%, rgba(0,0,0,0.3) 100%)`,
+                border: `1px solid rgba(${colorRgb},0.12)`,
               }}>
-              {deck.bpm}
-            </span>
-            <span className="font-vhs text-[10px] text-white/20 tracking-widest">BPM</span>
-          </div>
+              <span className="font-vhs text-2xl leading-none font-bold tabular-nums"
+                style={{
+                  color,
+                  textShadow: deck.isPlaying ? `0 0 16px rgba(${colorRgb},0.8)` : 'none',
+                  transition: 'text-shadow 0.5s ease',
+                }}>
+                {deck.bpm}
+              </span>
+              <span className="font-vhs text-[9px] text-white/20 tracking-widest">BPM</span>
+            </div>
 
-          {/* Time display */}
-          <div className="flex items-center gap-2">
-            <span className="font-vhs text-xs text-white/50 tabular-nums">{formatTime(deck.positionMs)}</span>
-            <div className="flex-1 h-px bg-white/[0.06]" />
-            <span className="font-vhs text-[10px] text-white/20 tabular-nums">{formatTime(deck.duration)}</span>
+            <div className="flex-1 flex items-center gap-2 min-w-0">
+              <span className="font-vhs text-[10px] text-white/50 tabular-nums shrink-0">{formatTime(deck.positionMs)}</span>
+              <div className="flex-1 h-px bg-white/[0.06]" />
+              <span className="font-vhs text-[9px] text-white/20 tabular-nums shrink-0">{formatTime(deck.duration)}</span>
+            </div>
           </div>
         </div>
 
-        {/* VU Meter */}
         <VUMeter isPlaying={deck.isPlaying} volume={deck.volume} color={color} />
+      </div>
+
+      {/* ── KNOBS ROW: EQ + Filter + Pitch ── */}
+      <div className="flex items-start justify-between gap-3 rounded-xl px-3 py-3"
+        style={{
+          background: 'rgba(0,0,0,0.3)',
+          border: '1px solid rgba(255,255,255,0.04)',
+        }}>
+        {/* EQ 3-band */}
+        <div className="flex items-start gap-3">
+          <Knob label="HI" value={deck.eqHi} onChange={(v) => updateDeck({ eqHi: v })} color={color} size={42} />
+          <Knob label="MID" value={deck.eqMid} onChange={(v) => updateDeck({ eqMid: v })} color={color} size={42} />
+          <Knob label="LOW" value={deck.eqLow} onChange={(v) => updateDeck({ eqLow: v })} color={color} size={42} />
+        </div>
+
+        {/* Divider */}
+        <div className="w-px self-stretch bg-white/[0.06]" />
+
+        {/* FILTER — bigger knob, the showpiece */}
+        <div className="flex items-center">
+          <Knob label="FILTER" value={deck.filter} onChange={(v) => updateDeck({ filter: v })} color={color} size={50} />
+        </div>
+
+        {/* Divider */}
+        <div className="w-px self-stretch bg-white/[0.06]" />
+
+        {/* PITCH slider */}
+        <div className="flex flex-col items-center gap-1">
+          <div className="font-vhs text-[8px] text-white/35 tracking-[0.3em]">PITCH</div>
+          <div className="relative h-10 w-6 flex items-center justify-center">
+            <input
+              type="range"
+              min={-1}
+              max={1}
+              step={0.01}
+              value={deck.pitch}
+              onChange={(e) => handlePitchChange(parseFloat(e.target.value))}
+              onDoubleClick={() => handlePitchChange(0)}
+              className="pitch-slider"
+              style={{
+                transform: 'rotate(-90deg)',
+                width: 40,
+              }}
+            />
+          </div>
+          <div className="font-vhs text-[8px] tabular-nums"
+            style={{ color: Math.abs(deck.pitch) > 0.03 ? color : 'rgba(255,255,255,0.2)' }}>
+            {deck.pitch > 0 ? '+' : ''}{(deck.pitch * 8).toFixed(1)}%
+          </div>
+        </div>
       </div>
 
       {/* ── WAVEFORM ── */}
@@ -140,26 +218,83 @@ export default function Deck({ deckId }: DeckProps) {
           style={{ border: `1px solid rgba(${colorRgb},0.25)` }} />
       </div>
 
-      {/* ── TRANSPORT CONTROLS ── */}
-      <div className="flex items-center gap-3">
+      {/* ── FX PADS ── */}
+      <FXPads deckId={deckId} />
 
-        {/* CUE button */}
+      {/* ── HOT CUES + LOOPS ── */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Hot cues */}
+        <div className="rounded-lg p-2"
+          style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className="font-vhs text-[7px] text-white/30 tracking-[0.3em] mb-1.5 px-0.5">HOT CUE</div>
+          <div className="grid grid-cols-4 gap-1">
+            {deck.hotCues.map((cue, i) => {
+              const isSet = cue !== null
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleHotCue(i)}
+                  onContextMenu={(e) => { e.preventDefault(); handleClearHotCue(i) }}
+                  className="font-vhs text-[9px] py-1.5 rounded transition-all duration-200 tabular-nums relative"
+                  style={{
+                    background: isSet ? `rgba(${colorRgb},0.18)` : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${isSet ? color + '70' : 'rgba(255,255,255,0.07)'}`,
+                    color: isSet ? color : 'rgba(255,255,255,0.35)',
+                    boxShadow: isSet ? `0 0 8px rgba(${colorRgb},0.3)` : 'none',
+                  }}
+                  title={isSet ? 'Click = jump. Right-click = clear.' : 'Click = set cue'}
+                >
+                  {i + 1}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Loop sizes */}
+        <div className="rounded-lg p-2"
+          style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className="font-vhs text-[7px] text-white/30 tracking-[0.3em] mb-1.5 px-0.5">LOOP</div>
+          <div className="grid grid-cols-4 gap-1">
+            {LOOP_SIZES.map((bars) => {
+              const isActive = deck.loopActive && deck.loopBars === bars
+              const label = bars < 1 ? '1/2' : `${bars}`
+              return (
+                <button
+                  key={bars}
+                  onClick={() => handleLoopToggle(bars)}
+                  className="font-vhs text-[9px] py-1.5 rounded transition-all duration-200"
+                  style={{
+                    background: isActive ? `rgba(${colorRgb},0.18)` : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${isActive ? color + '70' : 'rgba(255,255,255,0.07)'}`,
+                    color: isActive ? color : 'rgba(255,255,255,0.35)',
+                    boxShadow: isActive ? `0 0 8px rgba(${colorRgb},0.3)` : 'none',
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── TRANSPORT CONTROLS ── */}
+      <div className="flex items-center gap-2">
+        {/* CUE */}
         <button onClick={handleCue}
-          className="font-vhs text-[9px] px-3 py-2.5 rounded-lg tracking-widest transition-all duration-200 flex-shrink-0"
+          className="font-vhs text-[9px] px-2.5 py-2 rounded-lg tracking-widest transition-all flex-shrink-0"
           style={{
             background: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.07)',
             color: 'rgba(255,255,255,0.3)',
-          }}
-          onMouseEnter={e => { (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)' }}
-          onMouseLeave={e => { (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.3)'; (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
-        >
+          }}>
           CUE
         </button>
 
-        {/* PLAY button — the star */}
+        {/* PLAY */}
         <button onClick={handlePlay}
-          className="relative w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
+          className="relative w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
           style={{
             background: deck.isPlaying
               ? `radial-gradient(circle, rgba(${colorRgb},0.25) 0%, rgba(${colorRgb},0.08) 70%)`
@@ -168,11 +303,10 @@ export default function Deck({ deckId }: DeckProps) {
               ? `2px solid rgba(${colorRgb},0.7)`
               : '2px solid rgba(255,255,255,0.1)',
             boxShadow: deck.isPlaying
-              ? `0 0 30px rgba(${colorRgb},0.5), 0 0 60px rgba(${colorRgb},0.2), inset 0 0 20px rgba(${colorRgb},0.1)`
+              ? `0 0 24px rgba(${colorRgb},0.5), 0 0 50px rgba(${colorRgb},0.2)`
               : '0 4px 20px rgba(0,0,0,0.5)',
             color: deck.isPlaying ? color : 'rgba(255,255,255,0.4)',
           }}>
-          {/* Pulsing ring when playing */}
           {deck.isPlaying && (
             <div className="absolute inset-0 rounded-full animate-ping"
               style={{ border: `1px solid rgba(${colorRgb},0.3)`, animationDuration: '2s' }} />
@@ -183,32 +317,45 @@ export default function Deck({ deckId }: DeckProps) {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
             </svg>
           ) : deck.isPlaying ? (
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <rect x="5" y="4" width="4" height="16" rx="1.5" />
               <rect x="15" y="4" width="4" height="16" rx="1.5" />
             </svg>
           ) : (
-            <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
               <polygon points="6,3 20,12 6,21" />
             </svg>
           )}
         </button>
 
-        {/* LOOP button */}
-        <button onClick={() => setIsLooping(!isLooping)}
-          className="font-vhs text-[9px] px-3 py-2.5 rounded-lg tracking-widest transition-all duration-200 flex-shrink-0"
+        {/* TAPE STOP */}
+        <button onClick={handleTapeStop}
+          className="font-vhs text-[9px] px-2.5 py-2 rounded-lg tracking-widest transition-all flex-shrink-0"
           style={{
-            background: isLooping ? `rgba(${colorRgb},0.1)` : 'rgba(255,255,255,0.03)',
-            border: isLooping ? `1px solid rgba(${colorRgb},0.4)` : '1px solid rgba(255,255,255,0.07)',
-            color: isLooping ? color : 'rgba(255,255,255,0.3)',
-            boxShadow: isLooping ? `0 0 12px rgba(${colorRgb},0.2)` : 'none',
-          }}>
-          ⟳ LOOP
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            color: 'rgba(255,255,255,0.35)',
+          }}
+          title="Slow the record to a stop">
+          TAPE STOP
+        </button>
+
+        {/* SYNC */}
+        <button onClick={handleSync}
+          disabled={!deck.bpm || !otherDeck.bpm}
+          className="font-vhs text-[9px] px-2.5 py-2 rounded-lg tracking-widest transition-all flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            background: `rgba(${colorRgb},0.08)`,
+            border: `1px solid rgba(${colorRgb},0.25)`,
+            color: `rgba(${colorRgb},0.8)`,
+          }}
+          title="Match BPM to the other deck">
+          SYNC
         </button>
 
         <div className="flex-1" />
 
-        {/* Volume section */}
+        {/* Volume */}
         <div className="flex items-center gap-2">
           <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"
             style={{ color: `rgba(${colorRgb},0.4)` }}>
@@ -216,11 +363,11 @@ export default function Deck({ deckId }: DeckProps) {
           </svg>
           <input type="range" min={0} max={100} value={deck.volume}
             onChange={(e) => updateDeck({ volume: Number(e.target.value) })}
-            className="w-20 h-1.5 rounded-full appearance-none cursor-pointer"
+            className="w-16 h-1.5 rounded-full appearance-none cursor-pointer"
             style={{
               background: `linear-gradient(to right, rgba(${colorRgb},0.7) ${deck.volume}%, rgba(255,255,255,0.08) ${deck.volume}%)`,
             }} />
-          <span className="font-vhs text-[8px] w-6 text-right"
+          <span className="font-vhs text-[8px] w-5 text-right tabular-nums"
             style={{ color: `rgba(${colorRgb},0.6)` }}>{deck.volume}</span>
         </div>
       </div>

@@ -4,6 +4,7 @@ const sections = [
   { id: 'hero', label: 'TOP' },
   { id: 'contact', label: 'LINKS' },
   { id: 'events', label: 'LIVE' },
+  { id: 'mixer', label: 'MIX' },
   { id: 'bio', label: 'STORY' },
 ]
 

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import type { TrackData } from '../../data/tracks'
 import GenerativeCanvas from './GenerativeCanvas'
-import { scManager } from '../../lib/audio/soundcloudManager'
+import { audioManager } from '../../lib/audio/audioManager'
 import { useAudioStore } from '../../stores/audioStore'
 
 interface TrackCardProps {
@@ -19,9 +19,10 @@ export default function TrackCard({ track, compact = false }: TrackCardProps) {
       ? useAudioStore.getState().updateDeckA
       : useAudioStore.getState().updateDeckB
 
-    scManager.loadTrack(deckId, track.soundcloudUrl)
+    const url = track.audioUrl || track.soundcloudUrl
+    audioManager.loadTrack(deckId, url, { title: track.title, artist: track.artist })
     updateDeck({
-      bpm: track.bpm, trackUrl: track.soundcloudUrl,
+      bpm: track.bpm, trackUrl: url,
       trackTitle: track.title, trackArtist: track.artist,
       isPlaying: false, position: 0, positionMs: 0,
     })

@@ -1,16 +1,23 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Deck from './Deck'
 import Crossfader from './Crossfader'
-import { scManager } from '../../lib/audio/soundcloudManager'
+import FFTSpectrum from './FFTSpectrum'
+import RecordButton from './RecordButton'
+import CrowdMeter from './CrowdMeter'
+import FloorDestroyed from './FloorDestroyed'
+import { audioManager } from '../../lib/audio/audioManager'
 import { useAudioStore } from '../../stores/audioStore'
 import { equalPowerCrossfade } from '../../lib/audio/crossfaderMath'
 import { startBeatSimulator, stopBeatSimulator } from '../../lib/audio/beatSimulator'
 import { startVHSController, stopVHSController } from '../../lib/effects/vhsController'
 import { essentialTracks } from '../../data/tracks'
 
+const firstPlayable = essentialTracks.find(t => t.audioUrl) ?? essentialTracks[0]
+const secondPlayable = essentialTracks.find((t, i) => i > 0 && t.audioUrl) ?? essentialTracks[1]
+
 export default function DJMixer() {
-  const iframeARef = useRef<HTMLIFrameElement>(null)
-  const iframeBRef = useRef<HTMLIFrameElement>(null)
+  const audioARef = useRef<HTMLAudioElement>(null)
+  const audioBRef = useRef<HTMLAudioElement>(null)
   const crossfader = useAudioStore((s) => s.crossfader)
   const deckAVolume = useAudioStore((s) => s.deckA.volume)
   const deckBVolume = useAudioStore((s) => s.deckB.volume)
@@ -18,13 +25,15 @@ export default function DJMixer() {
   const deckBPlaying = useAudioStore((s) => s.deckB.isPlaying)
   const prevCrossfader = useRef(crossfader)
 
+  const [floorDestroyedTick, setFloorDestroyedTick] = useState(0)
+
   useEffect(() => {
     const setupDeck = (deckId: 'A' | 'B') => {
-      scManager.onProgress(deckId, (data) => {
+      audioManager.onProgress(deckId, (data) => {
         const update = deckId === 'A' ? useAudioStore.getState().updateDeckA : useAudioStore.getState().updateDeckB
         update({ positionMs: data.position, position: data.relativePosition })
       })
-      scManager.onStateChange(deckId, (state) => {
+      audioManager.onStateChange(deckId, (state) => {
         const update = deckId === 'A' ? useAudioStore.getState().updateDeckA : useAudioStore.getState().updateDeckB
         if (state === 'play') update({ isPlaying: true, isLoading: false, hasError: false })
         if (state === 'pause') update({ isPlaying: false })
@@ -33,28 +42,39 @@ export default function DJMixer() {
         if (state === 'loading') update({ isReady: false, isLoading: true, hasError: false })
         if (state === 'error') update({ isLoading: false, hasError: true, isPlaying: false })
       })
-      scManager.onTrackLoaded(deckId, (track) => {
+      audioManager.onTrackLoaded(deckId, (track) => {
         const update = deckId === 'A' ? useAudioStore.getState().updateDeckA : useAudioStore.getState().updateDeckB
         update({ trackTitle: track.title, trackArtist: track.artist, duration: track.duration, isLoaded: true })
       })
     }
     setupDeck('A')
     setupDeck('B')
-    if (iframeARef.current) scManager.initDeck('A', iframeARef.current)
-    const deckBTimer = setTimeout(() => {
-      if (iframeBRef.current) scManager.initDeck('B', iframeBRef.current)
-    }, 800)
-    useAudioStore.getState().updateDeckA({ bpm: essentialTracks[0].bpm, trackUrl: essentialTracks[0].soundcloudUrl, trackTitle: essentialTracks[0].title, trackArtist: essentialTracks[0].artist })
-    useAudioStore.getState().updateDeckB({ bpm: essentialTracks[1].bpm, trackUrl: essentialTracks[1].soundcloudUrl, trackTitle: essentialTracks[1].title, trackArtist: essentialTracks[1].artist })
+
+    if (audioARef.current) audioManager.initDeck('A', audioARef.current)
+    if (audioBRef.current) audioManager.initDeck('B', audioBRef.current)
+
+    useAudioStore.getState().updateDeckA({
+      bpm: firstPlayable.bpm,
+      trackUrl: firstPlayable.audioUrl || firstPlayable.soundcloudUrl,
+      trackTitle: firstPlayable.title,
+      trackArtist: firstPlayable.artist,
+    })
+    useAudioStore.getState().updateDeckB({
+      bpm: secondPlayable.bpm,
+      trackUrl: secondPlayable.audioUrl || secondPlayable.soundcloudUrl,
+      trackTitle: secondPlayable.title,
+      trackArtist: secondPlayable.artist,
+    })
+
     startBeatSimulator()
     startVHSController()
-    return () => { clearTimeout(deckBTimer); stopBeatSimulator(); stopVHSController() }
+    return () => { stopBeatSimulator(); stopVHSController() }
   }, [])
 
   useEffect(() => {
     const { volumeA, volumeB } = equalPowerCrossfade(crossfader, deckAVolume, deckBVolume)
-    scManager.setVolume('A', volumeA)
-    scManager.setVolume('B', volumeB)
+    audioManager.setVolume('A', volumeA)
+    audioManager.setVolume('B', volumeB)
   }, [crossfader, deckAVolume, deckBVolume])
 
   useEffect(() => {
@@ -63,19 +83,20 @@ export default function DJMixer() {
     const state = useAudioStore.getState()
     const bothLoaded = state.deckA.isLoaded && state.deckB.isLoaded
     if (!bothLoaded) return
-    if (prev <= 0.5 && crossfader > 0.5 && !state.deckB.isPlaying) scManager.play('B')
-    else if (prev >= 0.5 && crossfader < 0.5 && !state.deckA.isPlaying) scManager.play('A')
+    if (prev <= 0.5 && crossfader > 0.5 && !state.deckB.isPlaying) audioManager.play('B')
+    else if (prev >= 0.5 && crossfader < 0.5 && !state.deckA.isPlaying) audioManager.play('A')
   }, [crossfader])
 
   return (
     <div className="w-full max-w-7xl mx-auto">
-      {/* Hidden SC iframes */}
+      {/* Hidden <audio> elements */}
       <div className="sr-only" aria-hidden="true">
-        <iframe ref={iframeARef} id="sc-deck-a" width="300" height="166" scrolling="no" frameBorder="no" allow="autoplay"
-          src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(essentialTracks[0].soundcloudUrl)}&color=%2300ffcc&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false`} />
-        <iframe ref={iframeBRef} id="sc-deck-b" width="300" height="166" scrolling="no" frameBorder="no" allow="autoplay"
-          src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(essentialTracks[1].soundcloudUrl)}&color=%23ff003c&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false`} />
+        <audio ref={audioARef} id="audio-deck-a" preload="auto" crossOrigin="anonymous" src={firstPlayable.audioUrl || ''} />
+        <audio ref={audioBRef} id="audio-deck-b" preload="auto" crossOrigin="anonymous" src={secondPlayable.audioUrl || ''} />
       </div>
+
+      {/* FLOOR DESTROYED celebration overlay */}
+      <FloorDestroyed trigger={floorDestroyedTick} />
 
       {/* MIXER SHELL */}
       <div className="relative rounded-2xl overflow-hidden"
@@ -85,37 +106,32 @@ export default function DJMixer() {
           border: '1px solid rgba(255,255,255,0.06)',
         }}>
 
-        {/* Top chrome bar */}
-        <div className="flex items-center justify-between px-6 py-3"
+        {/* Top chrome bar — now with REC button + both deck indicators */}
+        <div className="flex items-center justify-between px-6 py-3 gap-4"
           style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          {/* Deck A indicator */}
           <div className="flex items-center gap-2.5">
             <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${deckAPlaying ? 'bg-primary shadow-[0_0_12px_#00ffcc,0_0_24px_#00ffcc60]' : 'bg-primary/20'}`} />
             <span className="font-vhs text-[11px] text-primary/50 tracking-[0.35em]">DECK A</span>
           </div>
 
-          {/* Center brand */}
-          <div className="font-vhs text-[11px] text-white/20 tracking-[0.45em]">DJ OGI // MIXER</div>
+          {/* Center — REC button replaces "DJ OGI // MIXER" */}
+          <RecordButton />
 
-          {/* Deck B indicator */}
           <div className="flex items-center gap-2.5">
             <span className="font-vhs text-[11px] text-accent/50 tracking-[0.35em]">DECK B</span>
             <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${deckBPlaying ? 'bg-accent shadow-[0_0_12px_#ff003c,0_0_24px_#ff003c60]' : 'bg-accent/20'}`} />
           </div>
         </div>
 
-        {/* Decks */}
-        <div className="grid grid-cols-1 lg:grid-cols-2">
+        {/* Decks + Crowd Meter between them */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-0">
           {/* Deck A panel */}
           <div className="relative p-5 lg:p-6"
             style={{
               borderRight: '1px solid rgba(255,255,255,0.04)',
-              background: deckAPlaying
-                ? 'linear-gradient(135deg, rgba(0,255,204,0.04) 0%, transparent 60%)'
-                : 'transparent',
+              background: deckAPlaying ? 'linear-gradient(135deg, rgba(0,255,204,0.04) 0%, transparent 60%)' : 'transparent',
               transition: 'background 0.8s ease',
             }}>
-            {/* Ambient glow when playing */}
             {deckAPlaying && (
               <div className="absolute top-0 left-0 w-48 h-48 pointer-events-none"
                 style={{ background: 'radial-gradient(ellipse, rgba(0,255,204,0.08) 0%, transparent 70%)' }} />
@@ -125,12 +141,20 @@ export default function DJMixer() {
             </div>
           </div>
 
+          {/* CROWD METER column */}
+          <div className="hidden lg:flex items-stretch justify-center relative"
+            style={{
+              background: 'rgba(0,0,0,0.25)',
+              borderLeft: '1px solid rgba(255,255,255,0.04)',
+              borderRight: '1px solid rgba(255,255,255,0.04)',
+            }}>
+            <CrowdMeter onFloorDestroyed={() => setFloorDestroyedTick((t) => t + 1)} />
+          </div>
+
           {/* Deck B panel */}
           <div className="relative p-5 lg:p-6"
             style={{
-              background: deckBPlaying
-                ? 'linear-gradient(225deg, rgba(255,0,60,0.04) 0%, transparent 60%)'
-                : 'transparent',
+              background: deckBPlaying ? 'linear-gradient(225deg, rgba(255,0,60,0.04) 0%, transparent 60%)' : 'transparent',
               transition: 'background 0.8s ease',
             }}>
             {deckBPlaying && (
@@ -144,15 +168,26 @@ export default function DJMixer() {
         </div>
 
         {/* Crossfader zone */}
-        <div className="px-6 py-5"
+        <div className="px-6 py-4"
           style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%)' }}>
           <Crossfader />
+        </div>
+
+        {/* Mobile CrowdMeter (horizontal slice above FFT on small screens) */}
+        <div className="lg:hidden px-6 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <CrowdMeter onFloorDestroyed={() => setFloorDestroyedTick((t) => t + 1)} />
+        </div>
+
+        {/* FFT SPECTRUM */}
+        <div className="px-6 pt-2 pb-3"
+          style={{ background: 'rgba(0,0,0,0.4)' }}>
+          <FFTSpectrum />
         </div>
 
         {/* Bottom chrome */}
         <div className="flex justify-between items-center px-6 py-2"
           style={{ borderTop: '1px solid rgba(255,255,255,0.03)', background: 'rgba(0,0,0,0.4)' }}>
-          <span className="font-vhs text-[7px] text-white/[0.08] tracking-widest">SOUNDCLOUD POWERED</span>
+          <span className="font-vhs text-[7px] text-white/[0.08] tracking-widest">WEB AUDIO // DUAL DECK // REAL-TIME FX</span>
           <div className="flex gap-5">
             <span className="font-vhs text-[7px] text-white/[0.08] tracking-widest">RIJEKA</span>
             <span className="font-vhs text-[7px] text-white/[0.08] tracking-widest">CROATIA</span>
