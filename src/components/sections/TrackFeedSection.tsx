@@ -267,9 +267,8 @@ export default function TrackFeedSection() {
               const isActive = cat.id === activeTab
               return (
                 <button key={cat.id} onClick={() => setActiveTab(cat.id)}
-                  className="relative flex-1 group/tab transition-all duration-300"
+                  className="relative flex-1 min-w-0 group/tab transition-all duration-300 px-1.5 py-2.5 md:px-3 md:py-3.5"
                   style={{
-                    padding: '14px 12px',
                     background: isActive ? `linear-gradient(180deg, rgba(${cat.rgb},0.08) 0%, rgba(${cat.rgb},0.02) 100%)` : 'transparent',
                     borderLeft: i === 0 ? `1px solid ${isActive ? cat.color + '60' : 'rgba(255,255,255,0.06)'}` : 'none',
                     borderRight: `1px solid ${isActive ? cat.color + '60' : 'rgba(255,255,255,0.06)'}`,
@@ -291,17 +290,18 @@ export default function TrackFeedSection() {
                       }} />
                   )}
 
-                  <div className="relative flex items-center justify-center gap-2.5">
+                  <div className="relative flex items-center justify-center gap-1.5 md:gap-2.5">
                     {/* Number */}
-                    <span className="font-vhs text-[10px] tabular-nums tracking-widest transition-colors"
+                    <span className="font-vhs text-[9px] md:text-[10px] tabular-nums tracking-widest transition-colors shrink-0"
                       style={{ color: isActive ? cat.color : 'rgba(255,255,255,0.2)' }}>
                       {String(i + 1).padStart(2, '0')}
                     </span>
 
-                    <span className="font-vhs text-white/20">/</span>
+                    {/* Slash — desktop only */}
+                    <span className="hidden md:inline font-vhs text-white/20">/</span>
 
                     {/* Label */}
-                    <span className="font-vhs text-xs md:text-sm tracking-[0.35em] transition-all duration-300"
+                    <span className="font-vhs text-[11px] md:text-sm tracking-[0.15em] md:tracking-[0.35em] transition-all duration-300 truncate"
                       style={{
                         color: isActive ? '#ffffff' : 'rgba(255,255,255,0.35)',
                         textShadow: isActive ? `0 0 12px rgba(${cat.rgb},0.5)` : 'none',
@@ -309,20 +309,32 @@ export default function TrackFeedSection() {
                       {cat.label}
                     </span>
 
-                    {/* Badge when active */}
+                    {/* Badge when active — desktop only (pill doesn't fit on mobile across 3 tabs) */}
                     {isActive && (
-                      <span className="px-1.5 py-0.5 rounded font-vhs text-[7px] font-bold tracking-wider tab-badge-blink"
+                      <span className="hidden md:inline px-1.5 py-0.5 rounded font-vhs text-[7px] font-bold tracking-wider tab-badge-blink shrink-0"
                         style={{ background: cat.color, color: '#000' }}>
                         {cat.badge}
                       </span>
                     )}
 
-                    {/* Track count */}
-                    <span className="font-vhs text-[8px] text-white/15 tabular-nums ml-auto md:ml-0"
+                    {/* Track count — desktop only */}
+                    <span className="hidden md:inline font-vhs text-[8px] text-white/15 tabular-nums ml-auto md:ml-0"
                       style={{ color: isActive ? `rgba(${cat.rgb},0.5)` : 'rgba(255,255,255,0.15)' }}>
                       [{TRACKS[cat.id].length}]
                     </span>
                   </div>
+
+                  {/* Mobile-only count dot underneath — small visual without taking horizontal space */}
+                  {isActive && (
+                    <span className="md:hidden absolute -bottom-1 left-1/2 -translate-x-1/2 font-vhs text-[7px] tabular-nums px-1.5 rounded-full"
+                      style={{
+                        color: cat.color,
+                        background: 'rgba(0,0,0,0.8)',
+                        border: `1px solid ${cat.color}60`,
+                      }}>
+                      {TRACKS[cat.id].length} · {cat.badge}
+                    </span>
+                  )}
                 </button>
               )
             })}
