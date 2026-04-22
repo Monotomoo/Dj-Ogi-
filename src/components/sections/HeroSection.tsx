@@ -266,8 +266,6 @@ export default function HeroSection() {
   const videoBgVisible = phase >= 1 && phase < 3
   // Portrait crossfades in during the big glitch (phase 3+)
   const portraitVisible = phase >= 3 && !videoMode
-  // Most UI chrome hides during videoMode
-  const chromeHidden = videoMode
 
   return (
     <section
